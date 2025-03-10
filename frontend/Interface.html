@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý hệ thống khách sạn</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            background: #e9ecef;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li button {
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        li button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quản lý hệ thống khách sạn</h1>
+        <input type="text" id="guestName" placeholder="Nhập tên khách">
+        <button onclick="addGuest()">Thêm khách</button>
+        <ul id="guestList"></ul>
+    </div>
+    <script>
+        let guests = [];
+
+        function addGuest() {
+            const guestNameInput = document.getElementById('guestName');
+            const guestName = guestNameInput.value.trim();
+
+            if (guestName) {
+                guests.push(guestName);
+                guestNameInput.value = '';
+                updateGuestList();
+            } else {
+                alert('Vui lòng nhập tên khách.');
+            }
+        }
+
+        function removeGuest(index) {
+            guests.splice(index, 1);
+            updateGuestList();
+        }
+
+        function updateGuestList() {
+            const guestList = document.getElementById('guestList');
+            guestList.innerHTML = '';
+
+            guests.forEach((guest, index) => {
+                const li = document.createElement('li');
+                li.textContent = guest;
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Xóa';
+                removeButton.onclick = () => removeGuest(index);
+
+                li.appendChild(removeButton);
+                guestList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
