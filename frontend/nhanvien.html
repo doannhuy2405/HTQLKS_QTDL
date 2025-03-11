@@ -1,1 +1,256 @@
-<!-- Quản lý nhân viên -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý nhân viên</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar ul li.active {
+            background: #16a085;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            color: white;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #16a085;
+            color: white;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .button-group button {
+            padding: 5px 10px;
+            font-size: 14px;
+            width: auto;
+            min-width: 80px;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Quản Lý Khách Sạn</h2>
+        <ul>
+            <li><a href="./phong.html">Quản lý phòng</a></li>
+            <li><a href="./khachhang.html">Quản lý khách hàng</a></li>
+            <li class="active"><a href="./nhanvien.html">Quản lý nhân viên</a></li>
+            <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
+            <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
+            <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+            <li><a href="./thongke.html">Thống kê</a></li>
+            <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <h1>Danh sách nhân viên</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã nhân viên</th>
+                    <th>Họ tên</th>
+                    <th>Ngày sinh</th>
+                    <th>Số điện thoại</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="staffsTableBody">
+                <!-- Dữ liệu -->
+            </tbody>
+        </table>
+
+        <h2>Thông tin nhân viên</h2>
+        <label>Mã nhân viên: <input type="text" id="staffId"></label>
+        <label>Họ tên: <input type="text" id="serviceId"></label>
+        <label>Ngày sinh: <input type="date" id="staffDate"></label>
+        <label>Số điện thoại: <input type="number" id="totalAmount"></label>
+        <div class="button-group">
+            <button onclick="addStaff()">Thêm</button>
+            <button onclick="updateStaff()">Sửa</button>
+            <button onclick="deleteStaff()">Xóa</button>
+            <button onclick="exportStaffExcel()">Xuất Excel</button>
+        </div>
+
+    </div>
+
+    <script>
+        function fetchStaffs() {
+            $.get("/api/staffs", function(data) {
+                let rows = "";
+                data.forEach(staff => {
+                    rows += `<tr>
+                        <td>${staff.MaNhanVien}</td>
+                        <td>${staff.HoTen}</td>
+                        <td>${staff.NgaySinh}</td>
+                        <td>${staff.SoDienThoai}</td>
+                        <td>
+                            <button onclick="fillForm('${staff.MaNhanVien}', '${staff.HoTen}', '${staff.NgaySinh}', '${staff.SoDienThoai}')">Chọn</button>
+                        </td>
+                    </tr>`;
+                });
+                $("#staffsTableBody").html(rows);
+            });
+        }
+
+        function fillForm(id, serviceId, date, total) {
+            $("#staffId").val(id);
+            $("#serviceId").val(serviceId);
+            $("#staffDate").val(date);
+            $("#totalAmount").val(total);
+        }
+
+        function addStaff() {
+            let data = {
+                MaNhanVien: $("#staffId").val().trim(),
+                HoTen: $("#serviceId").val().trim(),
+                NgaySinh: $("#staffDate").val().trim(),
+                SoDienThoai: $("#totalAmount").val().trim()
+            };
+            $.ajax({
+                url: "/api/staffs",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function() {
+                    fetchStaffs();
+                    clearForm();
+                }
+            });
+        }
+
+        function updateStaff() {
+            let id = $("#staffId").val().trim();
+            if (!id) {
+                alert("Vui lòng chọn nhân viên để sửa!");
+                return;
+            }
+
+            let data = {
+                HoTen: $("#serviceId").val().trim(),
+                NgaySinh: $("#staffDate").val().trim(),
+                SoDienThoai: $("#totalAmount").val().trim()
+            };
+
+            console.log("Dữ liệu gửi đi:", data); // Kiểm tra trên Console
+
+            $.ajax({
+                url: `/api/staffs/${id}`,
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function() {
+                    alert("Cập nhật thành công!");
+                    fetchStaffs(); // Cập nhật lại danh sách
+                    clearForm();
+                },
+                error: function(xhr) {
+                    alert("Lỗi khi cập nhật: " + xhr.responseText);
+                }
+            });
+        }
+
+        function deleteStaff() {
+            let id = $("#staffId").val().trim();
+            if (!id) {
+                alert("Vui lòng chọn nhân viên để xóa!");
+                return;
+            }
+
+            if (!confirm("Bạn có chắc muốn xóa nhân viên này?")) return;
+
+            $.ajax({
+                url: `/api/staffs/${id}`,
+                type: "DELETE",
+                success: function(response) {
+                    alert("Xóa thành công!");
+                    fetchStaffs(); // Cập nhật lại danh sách
+                    clearForm();
+                },
+                error: function(xhr) {
+                    alert("Lỗi khi xóa: " + xhr.responseText);
+                }
+            });
+        }
+
+
+
+        function exportStaffExcel() {
+            window.location.href = "/api/export_staffs_excel";
+        }
+
+        function clearForm() {
+            $("#staffId").val("");
+            $("#serviceId").val("");
+            $("#staffDate").val("");
+            $("#totalAmount").val("");
+        }
+
+        $(document).ready(fetchStaffs);
+
+        function handleLogout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("✅ Đã đăng xuất!");
+            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        }
+    </script>
+</body>
+</html>
