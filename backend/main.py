@@ -84,6 +84,11 @@ def export_excel():
      excel_path = "hoa_don.xlsx"
      df.to_excel(excel_path, index=False)
      return send_file(excel_path, as_attachment=True)
+ 
+ # Giao diện trang hóa đơn
+@app.route('/hoadon')
+def hoadon():
+    return render_template('../frontend/hoadon.html')
 
 # API thống kê doanh thu
 def thong_ke_doanh_thu(loai_thong_ke):
@@ -172,14 +177,9 @@ def export_customers_excel():
 
 # Giao diện trang khách hàng
 @app.route('/khachhang')
-def index():
+def khachhang():
     return render_template('../frontend/khachhang.html')
 
-
-# Giao diện trang hóa đơn
-@app.route('/hoadon')
-def index():
-    return render_template('../frontend/hoadon.html')
 
 # API trả dữ liệu JSON
 @app.route('/api/thongke', methods=['GET'])

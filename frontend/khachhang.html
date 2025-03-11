@@ -90,14 +90,14 @@
     <div class="sidebar">
         <h2>Quản Lý Khách Sạn</h2>
         <ul>
-            <li><a href="#">Quản lý phòng</a></li>
+            <li><a href="./phong.html">Quản lý phòng</a></li>
             <li class="active"><a href="./khachhang.html">Quản lý khách hàng</a></li>
-            <li><a href="#">Quản lý nhân viên</a></li>
-            <li><a href="#">Quản lý dịch vụ</a></li>
-            <li><a href="#">Quản lý thuê phòng</a></li>
+            <li><a href="./nhanvien.html">Quản lý nhân viên</a></li>
+            <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
+            <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
             <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
             <li><a href="./thongke.html">Thống kê</a></li>
-            <li><a href="#">Đăng xuất</a></li>
+            <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
         </ul>
     </div>
     <div class="content">
@@ -244,6 +244,13 @@
         }
 
         $(document).ready(fetchCustomers);
+
+        function handleLogout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("✅ Đã đăng xuất!");
+            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        }
     </script>
 </body>
 </html>
