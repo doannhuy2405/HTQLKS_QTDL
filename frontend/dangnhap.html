@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Khách sạn</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            background-image: url(./background.png);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            color: white;
+        }
+
+        .auth-form {
+            background-color: rgba(255, 255, 255, 0.8); 
+            border-radius: 10px;
+            padding: 20px;
+            margin: 80px;
+            width: 700px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+        }
+
+
+
+        .auth-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slogan {
+            font-size: 14px;
+            color: #f4f4f4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .login-btn, .register-btn {
+            background-color: #f50057;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover, .register-btn:hover {
+            background-color: #c51162;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 97%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .signup-link {
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .content {
+            flex: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="auth-form">
+            <h2 style="font-size: 1.8em;">Đăng Nhập</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <input type="text" id="username" placeholder="Nhập tên đăng nhập">
+                    <p id="usernameError" class="error-message"></p>
+                </div>
+    
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" placeholder="Nhập mật khẩu">
+                    <p id="passwordError" class="error-message"></p>
+                </div>
+    
+                <button type="button" class="btn login-btn">Đăng Nhập</button>
+            </form>
+    
+            <p class="signup-link">
+                Chưa có tài khoản?
+                <button class="btn login-btn" onclick="goToSignUp()">Đăng Ký</button>
+            </p>
+        </div>
+    </div>
+
+    <footer class="footer" style="font-size: 1.3em;">
+        Hệ Thống Quản Lý Khách Sạn © 2025
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loginBtn = document.querySelector(".auth-form .login-btn");
+        
+            loginBtn.addEventListener("click", async function (event) {
+                event.preventDefault(); // Ngăn chặn load lại trang
+        
+                const username = document.getElementById("username").value.trim();
+                const password = document.getElementById("password").value.trim();
+        
+                // Xóa thông báo lỗi cũ
+                document.getElementById("usernameError").textContent = "";
+                document.getElementById("passwordError").textContent = "";
+        
+                // Kiểm tra dữ liệu đầu vào
+                let hasError = false;
+                if (!username) {
+                    document.getElementById("usernameError").textContent = "Tên đăng nhập không được để trống.";
+                    hasError = true;
+                }
+                if (!password) {
+                    document.getElementById("passwordError").textContent = "Mật khẩu không được để trống.";
+                    hasError = true;
+                }
+                if (hasError) {
+                    alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
+                    return;
+                }
+        
+                try {
+                    const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, password }) // Gửi thông tin đăng nhập
+                    });
+        
+                    // Kiểm tra mã trạng thái HTTP
+                    if (!response.ok) {
+                        throw new Error(`Lỗi HTTP: ${response.status}`);
+                    }
+        
+                    const data = await response.json();
+        
+                    if (data.success) {
+                        // Lưu token và thông tin người dùng vào localStorage
+                        localStorage.setItem("token", data.token || "default_token"); // Đảm bảo backend trả về token
+                        localStorage.setItem("user", JSON.stringify(data.user || {})); // Đảm bảo backend trả về user
+        
+                        alert("🎉 Đăng nhập thành công!");
+                        window.location.href = "./thongke.html"; // Chuyển hướng sau khi đăng nhập thành công
+                    } else {
+                        alert("⚠️ " + (data.message || "Sai tài khoản hoặc mật khẩu!"));
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi đăng nhập:", error);
+                    alert("❌ Không thể kết nối đến server hoặc có lỗi xảy ra!");
+                }
+            });
+        });
+        
+
+        function goToSignUp() {
+            window.location.href = "./dangky.html"; // Chuyển sang trang đăng ký
+        }
+    </script>
+
+</body>
+</html>

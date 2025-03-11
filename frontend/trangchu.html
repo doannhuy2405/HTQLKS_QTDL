@@ -1,1 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Khách sạn</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            background-image: url(./background.png);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            color: white;
+        }
 
+        .auth-form {
+            background-color: rgba(255, 255, 255, 0.8); 
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 500px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .auth-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slogan {
+            font-size: 14px;
+            color: #f4f4f4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .login-btn, .register-btn {
+            background-color: #f50057;
+            color: white;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            gap: 20px;
+            position: fixed;
+            bottom: 0;
+        }
+
+        .footer-right {
+            font-size: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="auth-form">
+        <h2 style="font-size: 1.8em;"> Hệ Thống Quản Lý Khách Sạn</h2>
+        <p class="slogan" style="font-size: 1.2em;">Khoảnh khắc sang trọng, ký ức đáng giá.</p>
+        <div class="btn-container">
+            <button class="btn login-btn" onclick="window.location.href='./dangnhap.html'">Đăng Nhập</button>
+            <button class="btn register-btn" onclick="window.location.href='./dangky.html'">Đăng Ký</button>
+        </div>
+    </div>
+
+    <footer class="footer" style="font-size: 1.3em">
+        Hệ Thống Quản Lý Khách Sạn © 2025
+    </footer>
+</body>
+</html>

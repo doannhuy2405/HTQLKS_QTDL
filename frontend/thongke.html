@@ -89,7 +89,6 @@
     <div class="sidebar">
         <h2>Quản Lý Khách Sạn</h2>
         <ul>
-            <li><a href="/">Trang chủ</a></li>
             <li><a href="#">Quản lý phòng</a></li>
             <li><a href="#">Quản lý khách hàng</a></li>
             <li><a href="#">Quản lý nhân viên</a></li>
@@ -98,6 +97,7 @@
             <li><a href="/">Quản lý hóa đơn</a></li>
             <li class="active"><a href="/thongke">Thống kê</a></li>
             <li><a href="#">Xuất Excel</a></li>
+            <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
         </ul>
     </div>
     <div class="content">
@@ -137,6 +137,14 @@
                 })
                 .catch(error => console.error("Lỗi lấy dữ liệu: ", error));
         }
+
+        function handleLogout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("✅ Đã đăng xuất!");
+            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        }
+        
     </script>
 </body>
 </html>
