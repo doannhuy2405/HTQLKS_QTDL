@@ -1,9 +1,9 @@
-import bcrypt
+import bcrypt # type: ignore
 import re
 import pymysql # type: ignore
-import pandas as pd
+import pandas as pd # type: ignore
 from flask import Flask, request, jsonify, render_template, send_file # type: ignore
-from flask_cors import CORS  # Import flask-cors
+from flask_cors import CORS  # type: ignore # Import flask-cors
 
 
 app = Flask(__name__)
@@ -180,7 +180,6 @@ def export_customers_excel():
 def khachhang():
     return render_template('../frontend/khachhang.html')
 
-
 # API trả dữ liệu JSON
 @app.route('/api/thongke', methods=['GET'])
 def api_thong_ke():
@@ -266,15 +265,18 @@ def nhanvien():
 def thongke_page():
     return render_template('../frontend/thongke.html')
 
+
 # Hàm hash mật khẩu
 def hash_password(password):
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password
 
+
 # Hàm kiểm tra mật khẩu
 def check_password(input_password, hashed_password):
     return bcrypt.checkpw(input_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
 
 # API đăng nhập 
 @app.route("/api/auth/login", methods=["POST"])
@@ -310,8 +312,7 @@ def login():
         if 'conn' in locals():
             conn.close()
 
-            
-            
+        
 # API Đăng Ký
 @app.route("/api/auth/register", methods=["POST"])
 def register():

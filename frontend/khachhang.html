@@ -133,7 +133,7 @@
 
     <script>
         function fetchCustomers() {
-            $.get("/api/customers", function(data) {
+            $.get("http://127.0.0.1:5000/api/customers", function(data) {
                 let rows = "";
                 data.forEach(customer => {
                     rows += `<tr>
@@ -165,7 +165,7 @@
                 SoDienThoai: $("#totalAmount").val().trim()
             };
             $.ajax({
-                url: "/api/customers",
+                url: "http://127.0.0.1:5000/api/customers",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -192,7 +192,7 @@
             console.log("Dữ liệu gửi đi:", data); // Kiểm tra trên Console
 
             $.ajax({
-                url: `/api/customers/${id}`,
+                url: `http://127.0.0.1:5000/api/customers/${id}`,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -217,7 +217,7 @@
             if (!confirm("Bạn có chắc muốn xóa khách hàng này?")) return;
 
             $.ajax({
-                url: `/api/customers/${id}`,
+                url: `http://127.0.0.1:5000/api/customers/${id}`,
                 type: "DELETE",
                 success: function(response) {
                     alert("Xóa thành công!");
@@ -233,7 +233,7 @@
 
 
         function exportCustomerExcel() {
-            window.location.href = "/api/export_customers_excel";
+            window.location.href = "http://127.0.0.1:5000/api/export_customers_excel";
         }
 
         function clearForm() {

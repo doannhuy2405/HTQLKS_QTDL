@@ -133,7 +133,7 @@
  
      <script>
          function fetchInvoices() {
-             $.get("/api/invoices", function(data) {
+             $.get("http://127.0.0.1:5000/api/invoices", function(data) {
                  let rows = "";
                  data.forEach(invoice => {
                      rows += `<tr>
@@ -148,7 +148,7 @@
                  });
                  $("#invoiceTableBody").html(rows);
              });
-         }
+            }
  
          function fillForm(id, serviceId, date, total) {
              $("#invoiceId").val(id);
@@ -165,7 +165,7 @@
                  TongTien: $("#totalAmount").val().trim()
              };
              $.ajax({
-                 url: "/api/invoices",
+                 url: "http://127.0.0.1:5000/api/invoices",
                  type: "POST",
                  contentType: "application/json",
                  data: JSON.stringify(data),
@@ -192,7 +192,7 @@
              console.log("Dữ liệu gửi đi:", data); // Kiểm tra trên Console
  
              $.ajax({
-                 url: `/api/invoices/${id}`,
+                 url: `http://127.0.0.1:5000/api/invoices/${id}`,
                  type: "PUT",
                  contentType: "application/json",
                  data: JSON.stringify(data),
@@ -217,7 +217,7 @@
              if (!confirm("Bạn có chắc muốn xóa hóa đơn này?")) return;
  
              $.ajax({
-                 url: `/api/invoices/${id}`,
+                 url: `http://127.0.0.1:5000/api/invoices/${id}`,
                  type: "DELETE",
                  success: function(response) {
                      alert("Xóa thành công!");
@@ -233,7 +233,7 @@
  
  
          function exportExcel() {
-             window.location.href = "/api/export-excel";
+             window.location.href = "http://127.0.0.1:5000/api/export-excel";
          }
  
          function clearForm() {

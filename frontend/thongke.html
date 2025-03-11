@@ -124,7 +124,7 @@
     <script>
         function layThongKe() {
             let loai = document.getElementById("loaiThongKe").value;
-            fetch(`/api/thongke?loai=${loai}`)
+            fetch(`http://127.0.0.1:5000/api/thongke?loai=${loai}`)
                 .then(response => response.json())
                 .then(data => {
                     let tbody = document.getElementById("dataBody");
