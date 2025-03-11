@@ -105,6 +105,77 @@ def thong_ke_doanh_thu(loai_thong_ke):
     conn.close()
     return result
 
+# API lấy danh sách khách hàng
+@app.route('/api/customers', methods=['GET'])
+def get_customers():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM KhachHang")
+    customers = cursor.fetchall()
+    conn.close()
+    return jsonify(customers)
+
+
+# API thêm khách hàng
+@app.route('/api/customers', methods=['POST'])
+def add_customers():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = ("INSERT INTO KhachHang (MaKhachHang, TenKhachHang, DiaChi, SoDienThoai) VALUES (%s, %s, %s, %s)")
+    cursor.execute(sql, (data['MaKhachHang'], data['TenKhachHang'], data['DiaChi'], data['SoDienThoai']))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Thêm hóa đơn thành công'})
+
+# # API sửa khách hàng
+@app.route("/api/customers/<id>", methods=["PUT"])
+def update_customers(id):
+    try:
+        data = request.get_json()
+        conn = get_db_connection()  # Lấy kết nối MySQL
+        cursor = conn.cursor()
+
+        sql = """
+            UPDATE KhachHang
+            SET TenKhachHang = %s, DiaChi = %s, SoDienThoai = %s 
+            WHERE MaKhachHang = %s
+        """
+        cursor.execute(sql, (data["TenKhachHang"], data["DiaChi"], data["SoDienThoai"], id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Cập nhật thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# API xóa khách hàng
+@app.route('/api/customers/<string:MaKhachHang>', methods=['DELETE'])
+def delete_customers(MaKhachHang):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = "DELETE FROM KhachHang WHERE MaKhachHang=%s"
+    cursor.execute(sql, (MaKhachHang,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Xóa hóa đơn thành công'})
+
+# API xuất Excel
+@app.route('/api/export_customers_excel', methods=['GET'])
+def export_customers_excel():
+    conn = get_db_connection()
+    df = pd.read_sql("SELECT * FROM KhachHang", conn)
+    conn.close()
+    excel_path = "khach_hang.xlsx"
+    df.to_excel(excel_path, index=False)
+    return send_file(excel_path, as_attachment=True)
+
+# Giao diện trang khách hàng
+@app.route('/khachhang')
+def index():
+    return render_template('../frontend/khachhang.html')
+
+
 # Giao diện trang hóa đơn
 @app.route('/hoadon')
 def index():
