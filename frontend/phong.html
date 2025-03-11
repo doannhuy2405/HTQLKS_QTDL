@@ -1,1 +1,218 @@
 <!-- Quản lý phòng -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý phòng</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar ul li.active {
+            background: #16a085;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #16a085;
+            color: white;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Quản Lý Khách Sạn</h2>
+        <ul>
+            <li class="active"><a href="./phong.html">Quản lý phòng</a></li>
+            <li><a href="./khachhang.html">Quản lý khách hàng</a></li>
+            <li><a href="./nhanvien.html">Quản lý nhân viên</a></li>
+            <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
+            <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
+            <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+            <li><a href="./thongke.html">Thống kê</a></li>
+            <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <h1>Danh sách phòng</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã phòng</th>
+                    <th>Loại phòng</th>
+                    <th>Giá</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="roomsTableBody">
+                <!-- Dữ liệu -->
+            </tbody>
+        </table>
+
+        <h2>Thông tin phòng</h2>
+        <label>Mã phòng: <input type="text" id="roomId"></label>
+        <label>Loại phòng: <input type="text" id="roomType"></label>
+        <label>Giá: <input type="number" id="roomPrice"></label>
+        <label>Trạng thái: <input type="text" id="roomStatus"></label>
+        <div class="button-group">
+            <button onclick="addRoom()">Thêm</button>
+            <button onclick="updateRoom()">Sửa</button>
+            <button onclick="deleteRoom()">Xóa</button>
+            <button onclick="exportRoomExcel()">Xuất Excel</button>
+        </div>
+    </div>
+
+    <script>
+        function fetchRooms() {
+            $.get("/api/rooms", function(data) {
+                let rows = "";
+                data.forEach(room => {
+                    rows += `<tr>
+                        <td>${room.MaPhong}</td>
+                        <td>${room.LoaiPhong}</td>
+                        <td>${room.Gia}</td>
+                        <td>${room.TrangThai}</td>
+                        <td>
+                            <button onclick="fillForm('${room.MaPhong}', '${room.LoaiPhong}', '${room.Gia}', '${room.TrangThai}')">Chọn</button>
+                        </td>
+                    </tr>`;
+                });
+                $("#roomsTableBody").html(rows);
+            });
+        }
+
+        function fillForm(id, type, price, status) {
+            $("#roomId").val(id);
+            $("#roomType").val(type);
+            $("#roomPrice").val(price);
+            $("#roomStatus").val(status);
+        }
+
+        function addRoom() {
+            let data = {
+                MaPhong: $("#roomId").val().trim(),
+                LoaiPhong: $("#roomType").val().trim(),
+                Gia: $("#roomPrice").val().trim(),
+                TrangThai: $("#roomStatus").val().trim()
+            };
+            $.ajax({
+                url: "/api/rooms",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function() {
+                    fetchRooms();
+                    clearForm();
+                }
+            });
+        }
+
+        function updateRoom() {
+            let id = $("#roomId").val().trim();
+            if (!id) {
+                alert("Vui lòng chọn phòng để sửa!");
+                return;
+            }
+            let data = {
+                LoaiPhong: $("#roomType").val().trim(),
+                Gia: $("#roomPrice").val().trim(),
+                TrangThai: $("#roomStatus").val().trim()
+            };
+            $.ajax({
+                url: `/api/rooms/${id}`,
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function() {
+                    alert("Cập nhật thành công!");
+                    fetchRooms();
+                    clearForm();
+                }
+            });
+        }
+
+        function deleteRoom() {
+            let id = $("#roomId").val().trim();
+            if (!id) {
+                alert("Vui lòng chọn phòng để xóa!");
+                return;
+            }
+            if (!confirm("Bạn có chắc muốn xóa phòng này?")) return;
+            $.ajax({
+                url: `/api/rooms/${id}`,
+                type: "DELETE",
+                success: function() {
+                    alert("Xóa thành công!");
+                    fetchRooms();
+                    clearForm();
+                }
+            });
+        }
+
+        function exportRoomExcel() {
+            window.location.href = "/api/export_rooms_excel";
+        }
+
+        function clearForm() {
+            $("#roomId").val("");
+            $("#roomType").val("");
+            $("#roomPrice").val("");
+            $("#roomStatus").val("");
+        }
+
+        $(document).ready(fetchRooms);
+    </script>
+</body>
+</html>
