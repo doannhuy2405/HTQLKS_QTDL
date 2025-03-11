@@ -15,7 +15,7 @@ def get_db_connection():
     return pymysql.connect(
         host='127.0.0.1',
         user='root',
-        password='', 
+        password='', # Nhập password MySQL vào đây
         database='QuanLyKhachSan',
         cursorclass=pymysql.cursors.DictCursor
         )
