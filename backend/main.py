@@ -108,7 +108,7 @@ def thong_ke_doanh_thu(loai_thong_ke):
 # Giao diện trang hóa đơn
 @app.route('/hoadon')
 def index():
-    return render_template('hoadon.html')
+    return render_template('../frontend/hoadon.html')
 
 # API trả dữ liệu JSON
 @app.route('/api/thongke', methods=['GET'])
@@ -117,13 +117,13 @@ def api_thong_ke():
     data = thong_ke_doanh_thu(loai_thong_ke)
     return jsonify(data)
 
-# @app.route('/', methods=['GET'])
-# def trangchu_page():
-#     return render_template('trangchu.html')
+@app.route('/', methods=['GET'])
+def trangchu_page():
+    return render_template('../frontend/trangchu.html')
 
 @app.route('/thongke', methods=['GET'])
 def thongke_page():
-    return render_template('thongke.html')
+    return render_template('../frontend/thongke.html')
 
 # Hàm hash mật khẩu
 def hash_password(password):
@@ -214,59 +214,6 @@ def register():
     finally:
         if 'conn' in locals():
             conn.close()
-
-    
-
-# # API Đăng Ký
-# @app.route("/api/auth/register", methods=["POST"])
-# def register():
-#     try:
-#         data = request.json
-#         fullname = data.get("fullname", "").strip()
-#         email = data.get("email", "").strip()
-#         username = data.get("username", "").strip()
-#         password = data.get("password", "").strip()
-#         confirm_password = data.get("confirmPassword", "").strip()
-
-#         # ⚠ Kiểm tra dữ liệu đầu vào
-#         if not fullname or not email or not username or not password or not confirm_password:
-#             return jsonify({"success": False, "message": "⚠️ Vui lòng nhập đầy đủ thông tin!"}), 400
-
-#         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-#             return jsonify({"success": False, "message": "⚠️ Email không hợp lệ!"}), 400
-
-#         if len(password) < 6:
-#             return jsonify({"success": False, "message": "⚠️ Mật khẩu phải có ít nhất 6 ký tự!"}), 400
-
-#         if password != confirm_password:
-#             return jsonify({"success": False, "message": "⚠️ Mật khẩu xác nhận không khớp!"}), 400
-
-#         # ✅ Mã hóa mật khẩu SHA-256
-#         hashed_password = hashlib.sha256(password.encode()).hexdigest()
-
-#         # 🔗 Kết nối DB
-#         conn = get_db_connection()
-#         with conn.cursor() as cursor:
-#             # ❌ Check username hoặc email có tồn tại không
-#             cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
-#             if cursor.fetchone():
-#                 return jsonify({"success": False, "message": "⚠️ Tên đăng nhập hoặc email đã tồn tại!"}), 400
-
-#             # ✅ Lưu vào DB
-#             cursor.execute(
-#                 "INSERT INTO users (fullname, email, username, password) VALUES (%s, %s, %s, %s)",
-#                 (fullname, email, username, hashed_password)
-#             )
-#             conn.commit()
-
-#         return jsonify({"success": True, "message": "🎉 Đăng ký thành công!"}), 201
-
-#     except Exception as e:
-#         return jsonify({"success": False, "message": f"❌ Lỗi server: {str(e)}"}), 500
-#     finally:
-#         if 'conn' in locals():
-#             conn.close()
-
 
 
 if __name__ == '__main__':
