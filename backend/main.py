@@ -1,7 +1,8 @@
 import bcrypt
 import re
 import pymysql # type: ignore
-from flask import Flask, request, jsonify, render_template # type: ignore
+import pandas as pd
+from flask import Flask, request, jsonify, render_template, send_file # type: ignore
 from flask_cors import CORS  # Import flask-cors
 
 
@@ -18,6 +19,71 @@ def get_db_connection():
         database='QuanLyKhachSan',
         cursorclass=pymysql.cursors.DictCursor
         )
+    
+# API lấy danh sách hóa đơn
+@app.route('/api/invoices', methods=['GET'])
+def get_invoices():
+     conn = get_db_connection()
+     cursor = conn.cursor()
+     cursor.execute("SELECT * FROM HoaDon")
+     invoices = cursor.fetchall()
+     conn.close()
+     return jsonify(invoices)
+ 
+ 
+ # API thêm hóa đơn
+@app.route('/api/invoices', methods=['POST'])
+def add_invoice():
+     data = request.json
+     conn = get_db_connection()
+     cursor = conn.cursor()
+     sql = ("INSERT INTO HoaDon (MaHoaDon, MaSDDV, NgayLapHoaDon, TongTien) VALUES (%s, %s, %s, %s)")
+     cursor.execute(sql, (data['MaHoaDon'], data['MaSDDV'], data['NgayLapHoaDon'], data['TongTien']))
+     conn.commit()
+     conn.close()
+     return jsonify({'message': 'Thêm hóa đơn thành công'})
+ 
+ # # API sửa hóa đơn
+@app.route("/api/invoices/<id>", methods=["PUT"])
+def update_invoice(id):
+     try:
+         data = request.get_json()
+         conn = get_db_connection()  # Lấy kết nối MySQL
+         cursor = conn.cursor()
+ 
+         sql = """
+             UPDATE HoaDon 
+             SET MaSDDV = %s, NgayLapHoaDon = %s, TongTien = %s 
+             WHERE MaHoaDon = %s
+         """
+         cursor.execute(sql, (data["MaSDDV"], data["NgayLapHoaDon"], data["TongTien"], id))
+         conn.commit()
+         conn.close()
+ 
+         return jsonify({"message": "Cập nhật thành công!"}), 200
+     except Exception as e:
+         return jsonify({"error": str(e)}), 500
+ 
+ # API xóa hóa đơn
+@app.route('/api/invoices/<string:MaHoaDon>', methods=['DELETE'])
+def delete_invoice(MaHoaDon):
+     conn = get_db_connection()
+     cursor = conn.cursor()
+     sql = "DELETE FROM HoaDon WHERE MaHoaDon=%s"
+     cursor.execute(sql, (MaHoaDon,))
+     conn.commit()
+     conn.close()
+     return jsonify({'message': 'Xóa hóa đơn thành công'})
+ 
+ # API xuất Excel
+@app.route('/api/export-excel', methods=['GET'])
+def export_excel():
+     conn = get_db_connection()
+     df = pd.read_sql("SELECT * FROM HoaDon", conn)
+     conn.close()
+     excel_path = "hoa_don.xlsx"
+     df.to_excel(excel_path, index=False)
+     return send_file(excel_path, as_attachment=True)
 
 # API thống kê doanh thu
 def thong_ke_doanh_thu(loai_thong_ke):
@@ -38,6 +104,11 @@ def thong_ke_doanh_thu(loai_thong_ke):
         result = cursor.fetchall()
     conn.close()
     return result
+
+# Giao diện trang hóa đơn
+@app.route('/hoadon')
+def index():
+    return render_template('hoadon.html')
 
 # API trả dữ liệu JSON
 @app.route('/api/thongke', methods=['GET'])

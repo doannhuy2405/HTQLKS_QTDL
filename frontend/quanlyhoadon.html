@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+ <html lang="vi">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Quản lý hóa đơn</title>
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <style>
+         body {
+             display: flex;
+             font-family: Arial, sans-serif;
+             margin: 0;
+         }
+ 
+         .sidebar {
+             width: 250px;
+             background: #2c3e50;
+             color: white;
+             height: 100vh;
+             padding: 20px;
+         }
+ 
+         .sidebar h2 {
+             text-align: center;
+         }
+ 
+         .sidebar ul {
+             list-style: none;
+             padding: 0;
+         }
+ 
+         .sidebar ul li {
+             padding: 10px;
+         }
+ 
+         .sidebar ul li a {
+             color: white;
+             text-decoration: none;
+             display: block;
+         }
+ 
+         .sidebar ul li.active {
+             background: #16a085;
+         }
+ 
+         .content {
+             flex: 1;
+             padding: 20px;
+         }
+ 
+         h1 {
+             color: #2c3e50;
+         }
+ 
+         h2 {
+             color: white;
+             text-align: center;
+         }
+         table {
+             width: 100%;
+             border-collapse: collapse;
+         }
+         th, td {
+             border: 1px solid black;
+             padding: 8px;
+             text-align: left;
+         }
+         th {
+             background-color: #16a085;
+             color: white;
+         }
+         .button-group {
+             display: flex;
+             flex-wrap: wrap;
+             gap: 10px;
+             margin-top: 10px;
+         }
+ 
+         .button-group button {
+             padding: 5px 10px;
+             font-size: 14px;
+             width: auto;
+             min-width: 80px;
+         }
+ 
+ 
+     </style>
+ </head>
+ <body>
+     <div class="sidebar">
+         <h2>Quản Lý Khách Sạn</h2>
+         <ul>
+             <li><a href="/">Trang chủ</a></li>
+             <li><a href="#">Quản lý phòng</a></li>
+             <li><a href="#">Quản lý khách hàng</a></li>
+             <li><a href="#">Quản lý nhân viên</a></li>
+             <li><a href="#">Quản lý dịch vụ</a></li>
+             <li><a href="#">Quản lý thuê phòng</a></li>
+             <li class="active"><a href="./quanlyhoadon.html">Quản lý hóa đơn</a></li>
+             <li><a href="./thongke.html">Thống kê</a></li>
+             <li><a href="#">Xuất Excel</a></li>
+         </ul>
+     </div>
+     <div class="content">
+         <h1>Danh sách hóa đơn</h1>
+         <table>
+             <thead>
+                 <tr>
+                     <th>Mã hóa đơn</th>
+                     <th>Mã sử dụng dịch vụ</th>
+                     <th>Ngày lập</th>
+                     <th>Tổng tiền</th>
+                     <th>Hành động</th>
+                 </tr>
+             </thead>
+             <tbody id="invoiceTableBody">
+                 <!-- Dữ liệu -->
+             </tbody>
+         </table>
+ 
+         <h2>Thông tin hóa đơn</h2>
+         <label>Mã hóa đơn: <input type="text" id="invoiceId"></label>
+         <label>Mã dịch vụ: <input type="text" id="serviceId"></label>
+         <label>Ngày lập: <input type="date" id="invoiceDate"></label>
+         <label>Tổng tiền: <input type="number" id="totalAmount"></label>
+         <div class="button-group">
+             <button onclick="addInvoice()">Thêm</button>
+             <button onclick="updateInvoice()">Sửa</button>
+             <button onclick="deleteInvoice()">Xóa</button>
+             <button onclick="exportExcel()">Xuất Excel</button>
+         </div>
+ 
+     </div>
+ 
+     <script>
+         function fetchInvoices() {
+             $.get("/api/invoices", function(data) {
+                 let rows = "";
+                 data.forEach(invoice => {
+                     rows += `<tr>
+                         <td>${invoice.MaHoaDon}</td>
+                         <td>${invoice.MaSDDV}</td>
+                         <td>${invoice.NgayLapHoaDon}</td>
+                         <td>${invoice.TongTien}</td>
+                         <td>
+                             <button onclick="fillForm('${invoice.MaHoaDon}', '${invoice.MaSDDV}', '${invoice.NgayLapHoaDon}', '${invoice.TongTien}')">Chọn</button>
+                         </td>
+                     </tr>`;
+                 });
+                 $("#invoiceTableBody").html(rows);
+             });
+         }
+ 
+         function fillForm(id, serviceId, date, total) {
+             $("#invoiceId").val(id);
+             $("#serviceId").val(serviceId);
+             $("#invoiceDate").val(date);
+             $("#totalAmount").val(total);
+         }
+ 
+         function addInvoice() {
+             let data = {
+                 MaHoaDon: $("#invoiceId").val().trim(),
+                 MaSDDV: $("#serviceId").val().trim(),
+                 NgayLapHoaDon: $("#invoiceDate").val().trim(),
+                 TongTien: $("#totalAmount").val().trim()
+             };
+             $.ajax({
+                 url: "/api/invoices",
+                 type: "POST",
+                 contentType: "application/json",
+                 data: JSON.stringify(data),
+                 success: function() {
+                     fetchInvoices();
+                     clearForm();
+                 }
+             });
+         }
+ 
+         function updateInvoice() {
+             let id = $("#invoiceId").val().trim();
+             if (!id) {
+                 alert("Vui lòng chọn hóa đơn để sửa!");
+                 return;
+             }
+ 
+             let data = {
+                 MaSDDV: $("#serviceId").val().trim(),
+                 NgayLapHoaDon: $("#invoiceDate").val().trim(),
+                 TongTien: $("#totalAmount").val().trim()
+             };
+ 
+             console.log("Dữ liệu gửi đi:", data); // Kiểm tra trên Console
+ 
+             $.ajax({
+                 url: `/api/invoices/${id}`,
+                 type: "PUT",
+                 contentType: "application/json",
+                 data: JSON.stringify(data),
+                 success: function() {
+                     alert("Cập nhật thành công!");
+                     fetchInvoices(); // Cập nhật lại danh sách
+                     clearForm();
+                 },
+                 error: function(xhr) {
+                     alert("Lỗi khi cập nhật: " + xhr.responseText);
+                 }
+             });
+         }
+ 
+         function deleteInvoice() {
+             let id = $("#invoiceId").val().trim();
+             if (!id) {
+                 alert("Vui lòng chọn hóa đơn để xóa!");
+                 return;
+             }
+ 
+             if (!confirm("Bạn có chắc muốn xóa hóa đơn này?")) return;
+ 
+             $.ajax({
+                 url: `/api/invoices/${id}`,
+                 type: "DELETE",
+                 success: function(response) {
+                     alert("Xóa thành công!");
+                     fetchInvoices(); // Cập nhật lại danh sách
+                     clearForm();
+                 },
+                 error: function(xhr) {
+                     alert("Lỗi khi xóa: " + xhr.responseText);
+                 }
+             });
+         }
+ 
+ 
+ 
+         function exportExcel() {
+             window.location.href = "/api/export-excel";
+         }
+ 
+         function clearForm() {
+             $("#invoiceId").val("");
+             $("#serviceId").val("");
+             $("#invoiceDate").val("");
+             $("#totalAmount").val("");
+         }
+ 
+         $(document).ready(fetchInvoices);
+     </script>
+ </body>
+ </html>
