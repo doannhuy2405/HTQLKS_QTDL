@@ -131,7 +131,7 @@ def add_customers():
     cursor.execute(sql, (data['MaKhachHang'], data['TenKhachHang'], data['DiaChi'], data['SoDienThoai']))
     conn.commit()
     conn.close()
-    return jsonify({'message': 'Thêm hóa đơn thành công'})
+    return jsonify({'message': 'Thêm khách hànghàng thành công'})
 
 # # API sửa khách hàng
 @app.route("/api/customers/<id>", methods=["PUT"])
@@ -163,7 +163,7 @@ def delete_customers(MaKhachHang):
     cursor.execute(sql, (MaKhachHang,))
     conn.commit()
     conn.close()
-    return jsonify({'message': 'Xóa hóa đơn thành công'})
+    return jsonify({'message': 'Xóa khách hànghàng thành công'})
 
 # API xuất Excel
 @app.route('/api/export_customers_excel', methods=['GET'])
@@ -191,6 +191,76 @@ def api_thong_ke():
 @app.route('/', methods=['GET'])
 def trangchu_page():
     return render_template('../frontend/trangchu.html')
+
+# API lấy danh sách nhân viên
+@app.route('/api/staffs', methods=['GET'])
+def get_staffs():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM NhanVien")
+    staffs = cursor.fetchall()
+    conn.close()
+    return jsonify(staffs)
+
+
+# API thêm nhân viên
+@app.route('/api/staffs', methods=['POST'])
+def add_staffs():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = ("INSERT INTO NhanVien (MaNhanVien, HoTen, NgaySinh, SoDienThoai) VALUES (%s, %s, %s, %s)")
+    cursor.execute(sql, (data['MaNhanVien'], data['HoTen'], data['NgaySinh'], data['SoDienThoai']))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Thêm nhân viên thành công'})
+
+# # API sửa nhân viên
+@app.route("/api/staffs/<id>", methods=["PUT"])
+def update_staffs(id):
+    try:
+        data = request.get_json()
+        conn = get_db_connection()  # Lấy kết nối MySQL
+        cursor = conn.cursor()
+
+        sql = """
+            UPDATE NhanVien
+            SET HoTen = %s, NgaySinh = %s, SoDienThoai = %s 
+            WHERE MaNhanVien = %s
+        """
+        cursor.execute(sql, (data["HoTen"], data["NgaySinh"], data["SoDienThoai"], id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Cập nhật thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# API xóa nhân viên
+@app.route('/api/staffs/<string:MaNhanVien>', methods=['DELETE'])
+def delete_staffs(MaNhanVien):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = "DELETE FROM NhanVien WHERE MaNhanVien=%s"
+    cursor.execute(sql, (MaNhanVien,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Xóa nhân viên thành công'})
+
+# API xuất Excel
+@app.route('/api/export_staffs_excel', methods=['GET'])
+def export_staffs_excel():
+    conn = get_db_connection()
+    df = pd.read_sql("SELECT * FROM NhanVien", conn)
+    conn.close()
+    excel_path = "nhan_vien.xlsx"
+    df.to_excel(excel_path, index=False)
+    return send_file(excel_path, as_attachment=True)
+
+# Giao diện trang nhân viên
+@app.route('/nhanvien')
+def nhanvien():
+    return render_template('../frontend/nhanvien.html')
 
 @app.route('/thongke', methods=['GET'])
 def thongke_page():
