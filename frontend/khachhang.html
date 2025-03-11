@@ -1,1 +1,249 @@
-    <!-- Quản lý khách hàng -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý khách hàng</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar ul li.active {
+            background: #16a085;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            color: white;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #16a085;
+            color: white;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .button-group button {
+            padding: 5px 10px;
+            font-size: 14px;
+            width: auto;
+            min-width: 80px;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Quản Lý Khách Sạn</h2>
+        <ul>
+            <li><a href="#">Quản lý phòng</a></li>
+            <li class="active"><a href="/">Quản lý khách hàng</a></li>
+            <li><a href="#">Quản lý nhân viên</a></li>
+            <li><a href="#">Quản lý dịch vụ</a></li>
+            <li><a href="#">Quản lý thuê phòng</a></li>
+            <li><a href="/hoadon">Quản lý hóa đơn</a></li>
+            <li><a href="/thongke">Thống kê</a></li>
+            <li><a href="#">Đăng xuất</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <h1>Danh sách khách hàng</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã khách hàng</th>
+                    <th>Tên khách hàng</th>
+                    <th>Địa chỉ</th>
+                    <th>Số điện thoại</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="customersTableBody">
+                <!-- Dữ liệu -->
+            </tbody>
+        </table>
+
+        <h2>Thông tin khách hàng</h2>
+        <label>Mã khách hàng: <input type="text" id="customerId"></label>
+        <label>Tên khách hàng: <input type="text" id="serviceId"></label>
+        <label>Địa chỉ: <input type="text" id="customerDate"></label>
+        <label>Số điện thoại: <input type="number" id="totalAmount"></label>
+        <div class="button-group">
+            <button onclick="addCustomer()">Thêm</button>
+            <button onclick="updateCustomer()">Sửa</button>
+            <button onclick="deleteCustomer()">Xóa</button>
+            <button onclick="exportCustomerExcel()">Xuất Excel</button>
+        </div>
+
+    </div>
+
+    <script>
+        function fetchCustomers() {
+            $.get("/api/customers", function(data) {
+                let rows = "";
+                data.forEach(customer => {
+                    rows += `<tr>
+                        <td>${customer.MaKhachHang}</td>
+                        <td>${customer.TenKhachHang}</td>
+                        <td>${customer.DiaChi}</td>
+                        <td>${customer.SoDienThoai}</td>
+                        <td>
+                            <button onclick="fillForm('${customer.MaKhachHang}', '${customer.TenKhachHang}', '${customer.DiaChi}', '${customer.SoDienThoai}')">Chọn</button>
+                        </td>
+                    </tr>`;
+                });
+                $("#customersTableBody").html(rows);
+            });
+        }
+
+        function fillForm(id, serviceId, date, total) {
+            $("#customerId").val(id);
+            $("#serviceId").val(serviceId);
+            $("#customerDate").val(date);
+            $("#totalAmount").val(total);
+        }
+
+        function addCustomer() {
+            let data = {
+                MaKhachHang: $("#customerId").val().trim(),
+                TenKhachHang: $("#serviceId").val().trim(),
+                DiaChi: $("#customerDate").val().trim(),
+                SoDienThoai: $("#totalAmount").val().trim()
+            };
+            $.ajax({
+                url: "/api/customers",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function() {
+                    fetchCustomers();
+                    clearForm();
+                }
+            });
+        }
+
+        function updateCustomer() {
+            let id = $("#customerId").val().trim();
+            if (!id) {
+                alert("Vui lòng chọn khách hàng để sửa!");
+                return;
+            }
+
+            let data = {
+                TenKhachHang: $("#serviceId").val().trim(),
+                DiaChi: $("#customerDate").val().trim(),
+                SoDienThoai: $("#totalAmount").val().trim()
+            };
+
+            console.log("Dữ liệu gửi đi:", data); // Kiểm tra trên Console
+
+            $.ajax({
+                url: `/api/customers/${id}`,
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function() {
+                    alert("Cập nhật thành công!");
+                    fetchCustomers(); // Cập nhật lại danh sách
+                    clearForm();
+                },
+                error: function(xhr) {
+                    alert("Lỗi khi cập nhật: " + xhr.responseText);
+                }
+            });
+        }
+
+        function deleteCustomer() {
+            let id = $("#customerId").val().trim();
+            if (!id) {
+                alert("Vui lòng chọn khách hàng để xóa!");
+                return;
+            }
+
+            if (!confirm("Bạn có chắc muốn xóa khách hàng này?")) return;
+
+            $.ajax({
+                url: `/api/customers/${id}`,
+                type: "DELETE",
+                success: function(response) {
+                    alert("Xóa thành công!");
+                    fetchCustomers(); // Cập nhật lại danh sách
+                    clearForm();
+                },
+                error: function(xhr) {
+                    alert("Lỗi khi xóa: " + xhr.responseText);
+                }
+            });
+        }
+
+
+
+        function exportCustomerExcel() {
+            window.location.href = "/api/export_customers_excel";
+        }
+
+        function clearForm() {
+            $("#customerId").val("");
+            $("#serviceId").val("");
+            $("#customerDate").val("");
+            $("#totalAmount").val("");
+        }
+
+        $(document).ready(fetchCustomers);
+    </script>
+</body>
+</html>
