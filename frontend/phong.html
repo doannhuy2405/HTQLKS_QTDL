@@ -213,6 +213,13 @@
         }
 
         $(document).ready(fetchRooms);
+
+        function handleLogout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("✅ Đã đăng xuất!");
+            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        }
     </script>
 </body>
 </html>

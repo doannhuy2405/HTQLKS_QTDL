@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 CORS(app)  # Cho phép frontend gọi API
 
+
 # Kết nối MySQL
 def get_db_connection():
     return pymysql.connect(
@@ -20,6 +21,8 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
         )
     
+#----------------------------------------hoadon.html-------------------------------------------
+
 # API lấy danh sách hóa đơn
 @app.route('/api/invoices', methods=['GET'])
 def get_invoices():
@@ -30,8 +33,7 @@ def get_invoices():
      conn.close()
      return jsonify(invoices)
  
- 
- # API thêm hóa đơn
+# API thêm hóa đơn
 @app.route('/api/invoices', methods=['POST'])
 def add_invoice():
      data = request.json
@@ -43,7 +45,7 @@ def add_invoice():
      conn.close()
      return jsonify({'message': 'Thêm hóa đơn thành công'})
  
- # # API sửa hóa đơn
+# API sửa hóa đơn
 @app.route("/api/invoices/<id>", methods=["PUT"])
 def update_invoice(id):
      try:
@@ -64,7 +66,7 @@ def update_invoice(id):
      except Exception as e:
          return jsonify({"error": str(e)}), 500
  
- # API xóa hóa đơn
+# API xóa hóa đơn
 @app.route('/api/invoices/<string:MaHoaDon>', methods=['DELETE'])
 def delete_invoice(MaHoaDon):
      conn = get_db_connection()
@@ -90,6 +92,10 @@ def export_excel():
 def hoadon():
     return render_template('../frontend/hoadon.html')
 
+#----------------------------------------hoadon.html--------------------------------------------
+
+#----------------------------------------thongke.html-------------------------------------------
+
 # API thống kê doanh thu
 def thong_ke_doanh_thu(loai_thong_ke):
     query = """
@@ -110,6 +116,21 @@ def thong_ke_doanh_thu(loai_thong_ke):
     conn.close()
     return result
 
+# API trả dữ liệu JSON
+@app.route('/api/thongke', methods=['GET'])
+def api_thong_ke():
+    loai_thong_ke = request.args.get('loai', 'thang')  # Mặc định là theo tháng
+    data = thong_ke_doanh_thu(loai_thong_ke)
+    return jsonify(data)
+
+@app.route('/thongke', methods=['GET'])
+def thongke_page():
+    return render_template('../frontend/thongke.html')
+
+#----------------------------------------thongke.html-------------------------------------------
+
+#----------------------------------------khachhang.html-------------------------------------------
+
 # API lấy danh sách khách hàng
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
@@ -119,7 +140,6 @@ def get_customers():
     customers = cursor.fetchall()
     conn.close()
     return jsonify(customers)
-
 
 # API thêm khách hàng
 @app.route('/api/customers', methods=['POST'])
@@ -133,7 +153,7 @@ def add_customers():
     conn.close()
     return jsonify({'message': 'Thêm khách hànghàng thành công'})
 
-# # API sửa khách hàng
+# API sửa khách hàng
 @app.route("/api/customers/<id>", methods=["PUT"])
 def update_customers(id):
     try:
@@ -180,16 +200,13 @@ def export_customers_excel():
 def khachhang():
     return render_template('../frontend/khachhang.html')
 
-# API trả dữ liệu JSON
-@app.route('/api/thongke', methods=['GET'])
-def api_thong_ke():
-    loai_thong_ke = request.args.get('loai', 'thang')  # Mặc định là theo tháng
-    data = thong_ke_doanh_thu(loai_thong_ke)
-    return jsonify(data)
+#----------------------------------------khachhang.html-------------------------------------------
 
 @app.route('/', methods=['GET'])
 def trangchu_page():
     return render_template('../frontend/trangchu.html')
+
+#----------------------------------------nhanvien.html-------------------------------------------
 
 # API lấy danh sách nhân viên
 @app.route('/api/staffs', methods=['GET'])
@@ -200,7 +217,6 @@ def get_staffs():
     staffs = cursor.fetchall()
     conn.close()
     return jsonify(staffs)
-
 
 # API thêm nhân viên
 @app.route('/api/staffs', methods=['POST'])
@@ -261,10 +277,10 @@ def export_staffs_excel():
 def nhanvien():
     return render_template('../frontend/nhanvien.html')
 
-@app.route('/thongke', methods=['GET'])
-def thongke_page():
-    return render_template('../frontend/thongke.html')
+#----------------------------------------nhanvien.html-------------------------------------------
 
+
+#----------------------------------------dangnhap.html va dangky.html-------------------------------------------
 
 # Hàm hash mật khẩu
 def hash_password(password):
@@ -356,7 +372,8 @@ def register():
     finally:
         if 'conn' in locals():
             conn.close()
-
+            
+#----------------------------------------dangnhap.html va dangky.html-------------------------------------------
 
 if __name__ == '__main__':
     app.run(debug=True)

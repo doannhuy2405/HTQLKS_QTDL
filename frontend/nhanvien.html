@@ -133,7 +133,7 @@
 
     <script>
         function fetchStaffs() {
-            $.get("/api/staffs", function(data) {
+            $.get("http://127.0.0.1:5000/api/staffs", function(data) {
                 let rows = "";
                 data.forEach(staff => {
                     rows += `<tr>
@@ -165,7 +165,7 @@
                 SoDienThoai: $("#totalAmount").val().trim()
             };
             $.ajax({
-                url: "/api/staffs",
+                url: "http://127.0.0.1:5000/api/staffs",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -192,7 +192,7 @@
             console.log("Dữ liệu gửi đi:", data); // Kiểm tra trên Console
 
             $.ajax({
-                url: `/api/staffs/${id}`,
+                url: `http://127.0.0.1:5000/api/staffs/${id}`,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -217,7 +217,7 @@
             if (!confirm("Bạn có chắc muốn xóa nhân viên này?")) return;
 
             $.ajax({
-                url: `/api/staffs/${id}`,
+                url: `http://127.0.0.1:5000/api/staffs/${id}`,
                 type: "DELETE",
                 success: function(response) {
                     alert("Xóa thành công!");
@@ -233,7 +233,7 @@
 
 
         function exportStaffExcel() {
-            window.location.href = "/api/export_staffs_excel";
+            window.location.href = "http://127.0.0.1:5000/api/export_staffs_excel";
         }
 
         function clearForm() {
