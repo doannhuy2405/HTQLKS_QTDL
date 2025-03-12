@@ -375,11 +375,8 @@ def register():
             
 #----------------------------------------dangnhap.html va dangky.html-------------------------------------------
 
-if __name__ == '__main__':
-    app.run(debug=True)
+#----------------------------------------phong.html-------------------------------------------
 
-
-#QUẢN LÝ PHÒNG
 # API lấy danh sách phòng
 @app.route('/phong', methods=['GET'])
 def get_phong():
@@ -425,8 +422,10 @@ def export_phong():
     df.to_excel(file_path, index=False)
     return send_file(file_path, as_attachment=True)
 
+#----------------------------------------phong.html-------------------------------------------
 
-#QUẢN LÝ THUÊ PHÒNG
+#----------------------------------------thuephong.html-------------------------------------------
+
 # API đặt phòng
 @app.route('/thuephong', methods=['POST'])
 def dat_phong():
@@ -471,6 +470,8 @@ def export_thuephong():
     file_path = "danh_sach_thuephong.xlsx"
     df.to_excel(file_path, index=False)
     return send_file(file_path, as_attachment=True)
+
+#----------------------------------------thuephong.html-------------------------------------------
 
 if __name__ == '__main__':
     app.run(debug=True)
