@@ -377,3 +377,100 @@ def register():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+#QUẢN LÝ PHÒNG
+# API lấy danh sách phòng
+@app.route('/phong', methods=['GET'])
+def get_phong():
+    cursor.execute("SELECT * FROM Phong")
+    rooms = cursor.fetchall()
+    return jsonify(rooms)
+
+# API thêm phòng
+@app.route('/phong', methods=['POST'])
+def add_phong():
+    data = request.json
+    sql = "INSERT INTO Phong (MaLoai, SoPhong, TrangThai) VALUES (%s, %s, %s)"
+    values = (data['MaLoai'], data['SoPhong'], data['TrangThai'])
+    cursor.execute(sql, values)
+    conn.commit()
+    return jsonify({"message": "Thêm phòng thành công"})
+
+# API sửa thông tin phòng
+@app.route('/phong/<int:ma_phong>', methods=['PUT'])
+def update_phong(ma_phong):
+    data = request.json
+    sql = "UPDATE Phong SET MaLoai=%s, SoPhong=%s, TrangThai=%s WHERE MaPhong=%s"
+    values = (data['MaLoai'], data['SoPhong'], data['TrangThai'], ma_phong)
+    cursor.execute(sql, values)
+    conn.commit()
+    return jsonify({"message": "Cập nhật phòng thành công"})
+
+# API xóa phòng
+@app.route('/phong/<int:ma_phong>', methods=['DELETE'])
+def delete_phong(ma_phong):
+    sql = "DELETE FROM Phong WHERE MaPhong=%s"
+    cursor.execute(sql, (ma_phong,))
+    conn.commit()
+    return jsonify({"message": "Xóa phòng thành công"})
+
+# API xuất danh sách phòng ra Excel
+@app.route('/phong/export', methods=['GET'])
+def export_phong():
+    cursor.execute("SELECT * FROM Phong")
+    rooms = cursor.fetchall()
+    df = pd.DataFrame(rooms, columns=['MaPhong', 'MaLoai', 'SoPhong', 'TrangThai'])
+    file_path = "danh_sach_phong.xlsx"
+    df.to_excel(file_path, index=False)
+    return send_file(file_path, as_attachment=True)
+
+
+#QUẢN LÝ THUÊ PHÒNG
+# API đặt phòng
+@app.route('/thuephong', methods=['POST'])
+def dat_phong():
+    data = request.json
+    sql = "INSERT INTO ThuePhong (MaKhachHang, MaPhong, NgayThue, NgayNhan, NgayTra, TrangThai) VALUES (%s, %s, %s, %s, %s, %s)"
+    values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'])
+    cursor.execute(sql, values)
+    conn.commit()
+    return jsonify({"message": "Đặt phòng thành công"})
+
+# API lấy danh sách đặt phòng
+@app.route('/thuephong', methods=['GET'])
+def get_dat_phong():
+    cursor.execute("SELECT * FROM ThuePhong")
+    bookings = cursor.fetchall()
+    return jsonify(bookings)
+
+# API cập nhật đặt phòng
+@app.route('/thuephong/<int:ma_thue>', methods=['PUT'])
+def update_dat_phong(ma_thue):
+    data = request.json
+    sql = "UPDATE ThuePhong SET MaKhachHang=%s, MaPhong=%s, NgayThue=%s, NgayNhan=%s, NgayTra=%s, TrangThai=%s WHERE MaThue=%s"
+    values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'], ma_thue)
+    cursor.execute(sql, values)
+    conn.commit()
+    return jsonify({"message": "Cập nhật đặt phòng thành công"})
+
+# API xóa đặt phòng
+@app.route('/thuephong/<int:ma_thue>', methods=['DELETE'])
+def delete_dat_phong(ma_thue):
+    sql = "DELETE FROM ThuePhong WHERE MaThue=%s"
+    cursor.execute(sql, (ma_thue,))
+    conn.commit()
+    return jsonify({"message": "Xóa đặt phòng thành công"})
+
+# API xuất danh sách đặt phòng ra Excel
+@app.route('/thuephong/export', methods=['GET'])
+def export_thuephong():
+    cursor.execute("SELECT * FROM ThuePhong")
+    bookings = cursor.fetchall()
+    df = pd.DataFrame(bookings, columns=['MaThue', 'MaKhachHang', 'MaPhong', 'NgayThue', 'NgayNhan', 'NgayTra', 'TrangThai'])
+    file_path = "danh_sach_thuephong.xlsx"
+    df.to_excel(file_path, index=False)
+    return send_file(file_path, as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)
