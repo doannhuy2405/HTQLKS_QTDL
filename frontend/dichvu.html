@@ -1,1 +1,244 @@
 <!-- Quản lý dịch vụ -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý dịch vụ</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar ul li.active {
+            background: #16a085;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #16a085;
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .button-group button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Quản Lý Khách Sạn</h2>
+        <ul>
+            <li><a href="./phong.html">Quản lý phòng</a></li>
+            <li><a href="./khachhang.html">Quản lý khách hàng</a></li>
+            <li><a href="./nhanvien.html">Quản lý nhân viên</a></li>
+            <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
+            <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
+            <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+            <li><a href="./timkiem.html">Tìm kiếm</a></li>
+            <li><a href="./thongke.html">Thống kê</a></li>
+            <li><a href="#" id="logoutBtn">Đăng xuất</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>Danh sách dịch vụ</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Dịch Vụ</th>
+                    <th>Tên Dịch Vụ</th>
+                    <th>Giá Dịch Vụ</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="dichVu">
+                <!-- Dữ liệu từ API -->
+            </tbody>
+        </table>
+
+        <h2>Thông tin dịch vụ</h2>
+        <label>Mã dịch vụ: <input type="text" id="ma_dich_vu" readonly></label>
+        <label>Tên dịch vụ: <input type="text" id="ten_dich_vu"></label>
+        <label>Giá dịch vụ: <input type="text" id="gia_dich_vu"></label>
+        <div class="button-group">
+            <button onclick="themDichVu()">Thêm</button>
+            <button onclick="suaDichVu()">Sửa</button>
+            <button onclick="xoaDichVu()">Xóa</button>
+            <button onclick="xuatExcel()">Xuất Excel</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:5000/api/dichvu";
+        function fetchDichVu() {
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    let rows = "";
+                    data.forEach(dv => {
+                        rows += `<tr>
+                            <td>${dv.MaDichVu}</td>
+                            <td>${dv.TenDichVu}</td>
+                            <td>${dv.GiaDichVu}</td>
+                            <td>
+                                <button onclick="chonDichVu(${dv.MaDichVu}, '${dv.TenDichVu}', ${dv.GiaDichVu})">Chọn</button>
+                            </td>
+                        </tr>`;
+                    });
+                    document.getElementById("dichVu").innerHTML = rows;
+                })
+                .catch(error => console.error("Lỗi khi tải danh sách dịch vụ:", error));
+        }
+
+        function chonDichVu(ma, ten, gia) {
+            document.getElementById("ma_dich_vu").value = ma;
+            document.getElementById("ten_dich_vu").value = ten;
+            document.getElementById("gia_dich_vu").value = gia;
+        }
+
+        // 🟢 Thêm dịch vụ
+        function themDichVu() {
+            let tenDichVu = document.getElementById("ten_dich_vu").value;
+            let giaDichVu = document.getElementById("gia_dich_vu").value;
+
+            let data = { TenDichVu: tenDichVu, GiaDichVu: giaDichVu };
+
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(() => {
+                fetchDichVu();
+                clearForm();
+            })
+            .catch(error => console.error("Lỗi khi thêm dịch vụ:", error));
+        }
+
+        function suaDichVu() {
+            let maDichVu = document.getElementById("ma_dich_vu").value;
+            let tenDichVu = document.getElementById("ten_dich_vu").value;
+            let giaDichVu = document.getElementById("gia_dich_vu").value;
+
+            let data = { TenDichVu: tenDichVu, GiaDichVu: giaDichVu };
+
+            fetch(`${API_URL}/${maDichVu}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(() => {
+                fetchDichVu();
+                clearForm();
+            })
+            .catch(error => console.error("Lỗi khi cập nhật dịch vụ:", error));
+        }
+
+        function xoaDichVu() {
+            let maDichVu = document.getElementById("ma_dich_vu").value;
+
+            if (!maDichVu) {
+                alert("Vui lòng chọn dịch vụ cần xóa!");
+                return;
+        }
+
+            if (!confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) return;
+
+            fetch(`${API_URL}/${maDichVu}`, { method: "DELETE" })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Lỗi khi xóa dịch vụ: " + data.error);
+                } else {
+                    alert("Xóa dịch vụ thành công!");
+                    fetchDichVu();
+                    clearForm();
+                }
+            })
+            .catch(error => {
+                console.error("Lỗi khi xóa dịch vụ:", error);
+                alert("Lỗi kết nối API!");
+            });
+        }
+
+
+        function xuatExcel() {
+            window.location.href = "http://127.0.0.1:5000/api/export_services_excel";
+        }
+
+        function clearForm() {
+            document.getElementById("ma_dich_vu").value = "";
+            document.getElementById("ten_dich_vu").value = "";
+            document.getElementById("gia_dich_vu").value = "";
+        }
+
+        fetchDichVu();
+
+      function handleLogout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("✅ Đã đăng xuất!");
+            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        }
+    </script>
+</body>
+</html>
