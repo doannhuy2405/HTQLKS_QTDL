@@ -189,3 +189,122 @@ DELETE FROM users WHERE id IN (4);
 SELECT * FROM KhachHang;
 
 SHOW TABLES ;
+
+-- Lay danh sach khach hang: tim kiem, ngay nhan, ngay tra, sap xep theo ten
+DELIMITER $$
+CREATE PROCEDURE layDSKH(
+    IN startDate DATE,
+    IN endDate DATE,
+    IN orderType VARCHAR(5),
+    IN customerName VARCHAR(100)
+)
+BEGIN
+    DECLARE sortOrder VARCHAR(50);
+
+    -- Xác định thứ tự sắp xếp
+    IF orderType IS NULL OR orderType NOT IN ('ASC', 'DESC') THEN
+        SET sortOrder = 'NgayNhan ASC';
+    ELSE
+        SET sortOrder = CONCAT('TenKhachHang COLLATE utf8mb4_unicode_ci ', orderType);
+    END IF;
+
+    -- Tạo truy vấn động
+    SET @query = 'SELECT tp.MaThue, kh.TenKhachHang, kh.SoDienThoai, p.MaPhong,
+                         lp.TenLoai, tp.NgayNhan, tp.NgayTra
+                  FROM ThuePhong tp
+                  JOIN KhachHang kh ON tp.MaKhachHang = kh.MaKhachHang
+                  JOIN Phong p ON tp.MaPhong = p.MaPhong
+                  JOIN LoaiPhong lp ON p.MaLoai = lp.MaLoai
+                  WHERE 1 = 1';
+
+    IF startDate IS NOT NULL THEN
+        SET @query = CONCAT(@query, ' AND tp.NgayNhan >= "', startDate, '"');
+    END IF;
+
+    IF endDate IS NOT NULL THEN
+        SET @query = CONCAT(@query, ' AND tp.NgayTra <= "', endDate, '"');
+    END IF;
+
+    -- Nếu có nhập tên khách hàng, thêm điều kiện lọc theo tên
+    IF customerName IS NOT NULL AND customerName != '' THEN
+        SET @query = CONCAT(@query, ' AND kh.TenKhachHang LIKE "%', customerName, '%"');
+    END IF;
+
+    -- Thêm điều kiện sắp xếp
+    SET @query = CONCAT(@query, ' ORDER BY ', sortOrder);
+
+    -- Chuẩn bị và thực thi truy vấn
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END $$
+
+DELIMITER ;
+
+-- Lay danh sach phong theo: so phong, ten loai phong, trang thai
+DELIMITER $$
+CREATE PROCEDURE layDanhSachPhong(
+    IN soPhong INT, 
+    IN tenLoai VARCHAR(100), 
+    IN trangThai VARCHAR(50)
+)
+BEGIN
+    -- Tạo câu truy vấn động
+    SET @query = 'SELECT p.MaPhong, p.MaLoai, p.SoPhong, lp.TenLoai, lp.GiaPhong, p.TrangThai
+                  FROM Phong p
+                  JOIN LoaiPhong lp ON p.MaLoai = lp.MaLoai
+                  WHERE (trangThai = "" OR p.TrangThai = trangThai)';
+
+    -- Thêm điều kiện nếu có nhập số phòng
+    IF soPhong IS NOT NULL THEN
+        SET @query = CONCAT(@query, ' AND p.SoPhong = ', soPhong);
+    END IF;
+    
+    -- Thêm điều kiện nếu có nhập tên loại phòng
+    IF tenLoai IS NOT NULL AND tenLoai <> '' THEN
+        SET @query = CONCAT(@query, ' AND lp.TenLoai COLLATE utf8mb4_unicode_ci LIKE "%', tenLoai, '%"');
+    END IF;
+
+    -- Nếu `trangThai` không rỗng, lọc theo trạng thái cụ thể
+    IF trangThai IS NOT NULL AND trangThai <> '' THEN
+        SET @query = CONCAT(@query, ' AND p.TrangThai = "', trangThai, '"');
+    END IF;
+
+    -- Thực thi truy vấn
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END $$
+
+DELIMITER ;
+
+-- Lay danh sach nhan vien theo: ten, sdt
+DELIMITER $$
+
+CREATE PROCEDURE layDanhSachNhanVien(
+    IN tenNhanVien VARCHAR(100),
+    IN soDienThoai VARCHAR(20)
+)
+BEGIN
+    -- Tạo câu truy vấn động
+    SET @query = 'SELECT MaNhanVien, HoTen, NgaySinh, SoDienThoai 
+                  FROM NhanVien
+                  WHERE 1=1';
+
+    -- Thêm điều kiện nếu có nhập tên nhân viên
+    IF tenNhanVien IS NOT NULL AND tenNhanVien <> '' THEN
+        SET @query = CONCAT(@query, ' AND HoTen LIKE "%', tenNhanVien, '%"');
+    END IF;
+
+    -- Thêm điều kiện nếu có nhập số điện thoại
+    IF soDienThoai IS NOT NULL AND soDienThoai <> '' THEN
+        SET @query = CONCAT(@query, ' AND SoDienThoai LIKE "%', soDienThoai, '%"');
+    END IF;
+
+    -- Chuẩn bị và thực thi truy vấn
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END $$
+
+DELIMITER ;
