@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        h1 {
+            color: #2c3e50;
+        }
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            padding: 10px;
+        }
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+        }
+        .tab {
+            padding: 10px;
+            background: #16a085;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .tab.active {
+            background: #1abc9c;
+        }
+        .tab-content {
+            display: none;
+            margin-top: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Quản Lý Khách Sạn</h2>
+        <ul>
+            <li><a href="./phong.html">Quản lý phòng</a></li>
+            <li><a href="./khachhang.html">Quản lý khách hàng</a></li>
+            <li><a href="./nhanvien.html">Quản lý nhân viên</a></li>
+            <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
+            <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
+            <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+            <li><a href="./timkiem.html">Tìm kiếm</a></li>
+            <li><a href="./thongke.html">Thống kê</a></li>
+            <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <h1>Tìm kiếm</h1>
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('khachhang')">Khách hàng</div>
+            <div class="tab" onclick="showTab('nhanvien')">Nhân viên</div>
+            <div class="tab" onclick="showTab('phong')">Phòng</div>
+        </div>
+
+        <!-- Tìm kiếm khách hàng -->
+        <div id="khachhang" class="tab-content active">
+            <label>Tên khách hàng:</label>
+            <input type="text" id="ten_khach_hang" placeholder="Nhập tên khách hàng...">
+            <label>Sắp xếp theo</label>
+            <select id="sortTenKhachHang" onchange="sortKhachHang()">
+                <option value="tenAZ">Tên A → Z</option>
+                <option value="tenZA">Tên Z → A</option>
+            </select>
+
+            <label for="start_date">Ngày nhận:</label>
+            <input type="date" id="start_date">
+
+            <label for="end_date">Ngày trả:</label>
+            <input type="date" id="end_date">
+
+            <button onclick="timKiemKhachHang()">Tìm kiếm</button>
+            <button onclick="xuatDSKH()">Xuất Excel</button>
+            <h3>Kết quả tìm kiếm khách hàng:</h3>
+            <table id = "bangKhachHang">
+                <thead>
+                    <tr>
+                        <th>Mã Phòng</th>
+                        <th>Mã Thuê</th>
+                        <th>Tên Khách Hàng</th>
+                        <th>Số Điện Thoại</th>
+                        <th>Ngày Nhận</th>
+                        <th>Ngày Trả</th>
+                        <th>Loại Phòng</th>
+                    </tr>
+                </thead>
+                <tbody id="ketQuaKhachHang"></tbody>
+            </table>
+        </div>
+
+        <!-- Tìm kiếm nhân viên -->
+        <div id="nhanvien" class="tab-content">
+            <label>Tên nhân viên:</label>
+            <input type="text" id="ten_nhan_vien" placeholder="Nhập tên nhân viên...">
+            <label>Số điện thoại:</label>
+            <input type="text" id="sdt_nhan_vien" placeholder="Nhập số điện thoại...">
+            <button onclick="timKiemNhanVien()">Tìm kiếm</button>
+            <button onclick="xuatDSNV()">Xuất Excel</button>
+
+            <h3>Kết quả tìm kiếm nhân viên:</h3>
+            <table id="bangNhanVien">
+                <thead>
+                    <tr>
+                        <th>Mã NV</th>
+                        <th>Họ Tên</th>
+                        <th>Ngày Sinh</th>
+                        <th>Số Điện Thoại</th>
+                    </tr>
+                </thead>
+                <tbody id="ketQuaNhanVien"></tbody>
+            </table>
+        </div>
+
+        <!-- Tìm kiếm phòng -->
+        <div id="phong" class="tab-content">
+            <label>Số phòng:</label>
+            <input type="text" id="so_phong" placeholder="Nhập số phòng...">
+
+            <label>Loại phòng:</label>
+            <input type="text" id="loai_phong" placeholder="Nhập loại phòng...">
+
+            <label>Trạng thái</label>
+            <select id="trangThai" onchange="sort()">
+                <option value="">Tất cả</option>
+                <option value="trong">Trống</option>
+                <option value="dangSuDung">Đang sử dụng</option>
+            </select>
+
+            <button onclick="timKiemPhong()">Tìm kiếm</button>
+            <button onclick="xuatDSPhong()">Xuất Excel</button>
+
+            <h3>Kết quả tìm kiếm phòng:</h3>
+            <table id = "bangPhong">
+                <thead>
+                    <tr>
+                        <th>Mã Phòng</th>
+                        <th>Mã Loại</th>
+                        <th>Loại Phòng</th>
+                        <th>Số Phòng</th>
+                        <th>Trạng Thái</th>
+                        <th>Giá Phòng</th>
+                    </tr>
+                </thead>
+                <tbody id="ketQuaPhong"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        function timKiemKhachHang() {
+            let ten = document.getElementById("ten_khach_hang").value.trim();
+            let startDate = document.getElementById("start_date").value;
+            let endDate = document.getElementById("end_date").value;
+            let orderType = document.getElementById("sortTenKhachHang").value === "tenAZ" ? "ASC" : "DESC";
+
+            let requestBody = { orderType, customerName: ten };
+
+            if (startDate) requestBody.startDate = startDate;
+            if (endDate) requestBody.endDate = endDate;
+
+            fetch('http://localhost:5000/get-customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Dữ liệu API trả về:", data); 
+
+                let table = document.getElementById("ketQuaKhachHang");
+                table.innerHTML = ""; 
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    table.innerHTML = "<tr><td colspan='7'>Không tìm thấy khách hàng</td></tr>";
+                    return;
+                }
+
+                data.forEach(kh => {
+                    let ngayNhan = kh.NgayNhan ? new Date(kh.NgayNhan).toLocaleDateString("vi-VN") : "Không có dữ liệu";
+                    let ngayTra = kh.NgayTra ? new Date(kh.NgayTra).toLocaleDateString("vi-VN") : "Không có dữ liệu";
+
+                    table.innerHTML += `<tr>
+                        <td>${kh.MaPhong || "N/A"}</td>
+                        <td>${kh.MaThue || "N/A"}</td>
+                        <td>${kh.TenKhachHang || "Không rõ"}</td>
+                        <td>${kh.SoDienThoai || "Không có thông tin"}</td>
+                        <td>${ngayNhan}</td>
+                        <td>${ngayTra}</td>
+                        <td>${kh.TenLoai || "Chưa cập nhật"}</td>
+                    </tr>`;
+                });
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy dữ liệu khách hàng:', error);
+                document.getElementById("ketQuaKhachHang").innerHTML = "<tr><td colspan='7'>Lỗi khi tải dữ liệu</td></tr>";
+            });
+        }
+
+        function timKiemNhanVien() {
+            const tenNhanVien = document.getElementById('ten_nhan_vien').value.trim();
+            const soDienThoai = document.getElementById('sdt_nhan_vien').value.trim();
+            const payload = {
+                tenNhanVien: tenNhanVien || null, 
+                soDienThoai: soDienThoai || null
+            };
+            fetch('http://localhost:5000/get-employees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                hienThiKetQua(data);
+            })
+            .catch(error => {
+                console.error('Lỗi khi tìm kiếm nhân viên:', error);
+            });
+        }
+
+        function hienThiKetQua(data) {
+            const ketQuaNhanVien = document.getElementById('ketQuaNhanVien');
+            ketQuaNhanVien.innerHTML = ''; 
+
+            if (!data || data.length === 0) {
+                ketQuaNhanVien.innerHTML = '<tr><td colspan="4">Không tìm thấy nhân viên nào</td></tr>';
+                return;
+            }
+
+            data.forEach(nv => {
+                let ngaySinh = nv.NgaySinh ? new Date(nv.NgaySinh).toLocaleDateString("vi-VN") : "Không có dữ liệu";
+                const row = `<tr>
+                    <td>${nv.MaNhanVien}</td>
+                    <td>${nv.HoTen}</td>
+                    <td>${ngaySinh}</td>
+                    <td>${nv.SoDienThoai}</td>
+                </tr>`;
+                ketQuaNhanVien.innerHTML += row;
+            });
+        }
+
+        async function timKiemPhong() {
+        const soPhong = document.getElementById("so_phong").value.trim();
+        const loaiPhong = document.getElementById("loai_phong").value.trim();
+        let trangThai = document.getElementById("trangThai").value.trim(); 
+        if (trangThai === "Tất cả") trangThai = "";
+        else if (trangThai === "trong") trangThai = "Trống"; 
+
+        let payload = { soPhong: soPhong || null, tenLoai: loaiPhong || null, trangThai };
+        try {
+            const response = await fetch("http://localhost:5000/get-room-list", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) throw new Error(`Lỗi API: ${response.status}`);
+
+            const data = await response.json();
+            if (!data.success) throw new Error(data.message || "Có lỗi xảy ra từ API");
+
+            console.log("Dữ liệu nhận từ API:", data.data);
+            hienThiKetQuaPhong(data.data);
+        } catch (error) {
+            console.error(" Lỗi khi tìm kiếm phòng:", error);
+            document.getElementById("ketQuaPhong").innerHTML =
+                "<tr><td colspan='6'>Lỗi khi tải dữ liệu</td></tr>";
+            }
+        }
+
+        function hienThiKetQuaPhong(data) {
+            const ketQuaPhong = document.getElementById("ketQuaPhong");
+            ketQuaPhong.innerHTML = ""; 
+
+            console.log(" Dữ liệu trước khi hiển thị:", data); 
+
+            if (!Array.isArray(data) || data.length === 0) {
+                ketQuaPhong.innerHTML =
+                    '<tr><td colspan="6">Không tìm thấy phòng nào</td></tr>';
+                return;
+            }
+
+            // Hiển thị danh sách phòng
+            data.forEach((phong) => {
+                console.log(" Thêm phòng vào bảng:", phong); 
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${phong.MaPhong ?? "N/A"}</td>
+                    <td>${phong.MaLoai ?? "N/A"}</td>
+                    <td>${phong.TenLoai ?? "Không rõ"}</td>
+                    <td>${phong.SoPhong ?? "Không rõ"}</td>
+                    <td>${phong.TrangThai ?? "Không rõ"}</td>
+                    <td>${phong.GiaPhong ? parseFloat(phong.GiaPhong).toLocaleString("vi-VN") + " VND" : "Không rõ"}</td>
+                `;
+                ketQuaPhong.appendChild(row);
+            });
+        }
+
+        // Xuất file Excel từ bảng HTML
+        function exportTableToExcel(tableId, fileName) {
+            let table = document.getElementById(tableId);
+            if (!table) {
+                console.error("Bảng không tồn tại:", tableId);
+                return;
+            }
+
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.aoa_to_sheet(getTableData(table));
+
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+
+            let excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+            let data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+            saveAs(data, `${fileName}.xlsx`);
+        }
+
+        // Hàm lấy dữ liệu từ bảng 
+        function getTableData(table) {
+            let data = [];
+            let headers = [];
+            let headerRow = table.querySelector("thead tr");
+            if (headerRow) {
+                let headerCells = headerRow.querySelectorAll("th");
+                headerCells.forEach(th => headers.push(th.innerText.trim()));
+                data.push(headers); 
+            }
+
+            let rows = table.querySelectorAll("tbody tr");
+            rows.forEach(row => {
+                let rowData = [];
+                row.querySelectorAll("td").forEach(td => rowData.push(td.innerText.trim()));
+                data.push(rowData);
+            });
+
+            return data;
+        }
+
+        function xuatDSKH() {
+            exportTableToExcel("bangKhachHang", "DanhSachKhachHang");
+        }
+
+        function xuatDSNV() {
+            exportTableToExcel("bangNhanVien", "DanhSachNhanVien");
+        }
+
+        function xuatDSPhong() {
+            exportTableToExcel("bangPhong", "DanhSachPhong");
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("✅ Đã đăng xuất!");
+            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        }
+    </script>
+</body>
+</html>
