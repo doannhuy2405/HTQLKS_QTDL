@@ -473,5 +473,117 @@ def export_thuephong():
 
 #----------------------------------------thuephong.html-------------------------------------------
 
+#----------------------------------------dichvu.html----------------------------------------------
+# Lấy danh sách dịch vụ
+@app.route("/api/dichvu", methods=["GET"])
+def get_services():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu") 
+    services = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(services)
+
+
+# Thêm dịch vụ
+@app.route("/api/dichvu", methods=["POST"])
+def add_service():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        print("Dữ liệu nhận được:", data)
+        if "TenDichVu" not in data or "GiaDichVu" not in data:
+            return jsonify({"error": "Thiếu dữ liệu cần thiết"}), 400
+
+        cursor.execute("INSERT INTO DichVu (TenDichVu, GiaDichVu) VALUES (%s, %s)",
+                       (data["TenDichVu"], data["GiaDichVu"]))
+        conn.commit()
+        return jsonify({"message": "Dịch vụ được thêm thành công"}), 201
+    except Exception as e:
+        conn.rollback()
+        print("Lỗi xảy ra:", str(e))
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# Cập nhật dịch vụ
+@app.route("/api/dichvu/<int:id>", methods=["PUT"])
+def update_service(id):
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("UPDATE DichVu SET TenDichVu=%s, GiaDichVu=%s WHERE MaDichVu=%s",
+                       (data["TenDichVu"], data["GiaDichVu"], id))
+        conn.commit()
+        return jsonify({"message": "Cập nhật dịch vụ thành công"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/api/dichvu/<int:id>", methods=["DELETE"])
+def delete_service(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM DichVu WHERE MaDichVu = %s", (id,))
+        service = cursor.fetchone()
+
+        if not service:
+            return jsonify({"error": "Không tìm thấy dịch vụ để xóa"}), 404
+
+        cursor.execute("DELETE FROM DichVu WHERE MaDichVu=%s", (id,))
+        conn.commit()
+
+        return jsonify({"message": "Dịch vụ đã được xóa thành công"})
+
+    except mysql.connector.IntegrityError:
+        conn.rollback()
+        return jsonify({"error": "Không thể xóa dịch vụ do ràng buộc dữ liệu"}), 400
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# API xuất file Excel
+@app.route("/api/export_services_excel", methods=["GET"])
+def export_services_excel():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu")
+        data = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        conn.close()
+
+        if not data:
+            return jsonify({"message": "Không có dữ liệu để xuất"}), 404
+
+        df = pd.DataFrame(data, columns=column_names)
+
+        file_path = "services_list.xlsx"
+        df.to_excel(file_path, index=False)
+
+        return send_file(file_path, as_attachment=True)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 if __name__ == '__main__':
     app.run(debug=True)
