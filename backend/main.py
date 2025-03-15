@@ -19,7 +19,10 @@ def get_db_connection():
         password='', # Nhập password MySQL vào đây
         database='QuanLyKhachSan',
         cursorclass=pymysql.cursors.DictCursor
-        )
+    )
+    
+conn = get_db_connection()
+cursor = conn.cursor()
     
 #----------------------------------------hoadon.html-------------------------------------------
 
@@ -378,42 +381,56 @@ def register():
 #----------------------------------------phong.html-------------------------------------------
 
 # API lấy danh sách phòng
-@app.route('/phong', methods=['GET'])
+@app.route('/api/phong', methods=['GET'])
 def get_phong():
     cursor.execute("SELECT * FROM Phong")
     rooms = cursor.fetchall()
     return jsonify(rooms)
 
+
 # API thêm phòng
-@app.route('/phong', methods=['POST'])
+@app.route('/api/phong', methods=['POST'])
 def add_phong():
     data = request.json
+    if not all(key in data for key in ['MaLoai', 'SoPhong', 'TrangThai']):
+        return jsonify({"error": "Thiếu thông tin phòng"}), 400
+    if data['TrangThai'] not in ["Trống", "Đang sử dụng"]:
+        return jsonify({"error": "Trạng thái không hợp lệ"}), 400
+    
     sql = "INSERT INTO Phong (MaLoai, SoPhong, TrangThai) VALUES (%s, %s, %s)"
-    values = (data['MaLoai'], data['SoPhong'], data['TrangThai'])
-    cursor.execute(sql, values)
+    cursor.execute(sql, (data['MaLoai'], data['SoPhong'], data['TrangThai']))
     conn.commit()
     return jsonify({"message": "Thêm phòng thành công"})
 
+
 # API sửa thông tin phòng
-@app.route('/phong/<int:ma_phong>', methods=['PUT'])
+@app.route('/api/phong/<int:ma_phong>', methods=['PUT'])
 def update_phong(ma_phong):
     data = request.json
+    cursor.execute("SELECT * FROM Phong WHERE MaPhong=%s", (ma_phong,))
+    if not cursor.fetchone():
+        return jsonify({"error": "Phòng không tồn tại"}), 404
+    
     sql = "UPDATE Phong SET MaLoai=%s, SoPhong=%s, TrangThai=%s WHERE MaPhong=%s"
-    values = (data['MaLoai'], data['SoPhong'], data['TrangThai'], ma_phong)
-    cursor.execute(sql, values)
+    cursor.execute(sql, (data['MaLoai'], data['SoPhong'], data['TrangThai'], ma_phong))
     conn.commit()
     return jsonify({"message": "Cập nhật phòng thành công"})
 
+
 # API xóa phòng
-@app.route('/phong/<int:ma_phong>', methods=['DELETE'])
+@app.route('/api/phong/<int:ma_phong>', methods=['DELETE'])
 def delete_phong(ma_phong):
-    sql = "DELETE FROM Phong WHERE MaPhong=%s"
-    cursor.execute(sql, (ma_phong,))
+    cursor.execute("SELECT * FROM Phong WHERE MaPhong=%s", (ma_phong,))
+    if not cursor.fetchone():
+        return jsonify({"error": "Phòng không tồn tại"}), 404
+    
+    cursor.execute("DELETE FROM Phong WHERE MaPhong=%s", (ma_phong,))
     conn.commit()
     return jsonify({"message": "Xóa phòng thành công"})
 
+
 # API xuất danh sách phòng ra Excel
-@app.route('/phong/export', methods=['GET'])
+@app.route('/api/phong/export', methods=['GET'])
 def export_phong():
     cursor.execute("SELECT * FROM Phong")
     rooms = cursor.fetchall()
@@ -422,6 +439,7 @@ def export_phong():
     df.to_excel(file_path, index=False)
     return send_file(file_path, as_attachment=True)
 
+
 #----------------------------------------phong.html-------------------------------------------
 
 #----------------------------------------thuephong.html-------------------------------------------
@@ -429,250 +447,277 @@ def export_phong():
 # API đặt phòng
 @app.route('/thuephong', methods=['POST'])
 def dat_phong():
-    data = request.json
-    sql = "INSERT INTO ThuePhong (MaKhachHang, MaPhong, NgayThue, NgayNhan, NgayTra, TrangThai) VALUES (%s, %s, %s, %s, %s, %s)"
-    values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'])
-    cursor.execute(sql, values)
-    conn.commit()
-    return jsonify({"message": "Đặt phòng thành công"})
+    try:
+        data = request.json
+        sql = "INSERT INTO ThuePhong (MaKhachHang, MaPhong, NgayThue, NgayNhan, NgayTra, TrangThai) VALUES (%s, %s, %s, %s, %s, %s)"
+        values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'])
+        cursor.execute(sql, values)
+        conn.commit()
+        return jsonify({"message": "✅ Đặt phòng thành công!"}), 201
+    except Exception as e:
+        if "45000" in str(e):  # Lỗi từ trigger
+            return jsonify({"error": "⚠️ Phòng đã có khách đặt trước hoặc đang sử dụng!"}), 400
+        return jsonify({"error": str(e)}), 500
+    
 
 # API lấy danh sách đặt phòng
 @app.route('/thuephong', methods=['GET'])
 def get_dat_phong():
-    cursor.execute("SELECT * FROM ThuePhong")
-    bookings = cursor.fetchall()
-    return jsonify(bookings)
+    try:
+        cursor.execute("SELECT * FROM ThuePhong")
+        bookings = cursor.fetchall()
+        return jsonify(bookings), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 # API cập nhật đặt phòng
 @app.route('/thuephong/<int:ma_thue>', methods=['PUT'])
 def update_dat_phong(ma_thue):
-    data = request.json
-    sql = "UPDATE ThuePhong SET MaKhachHang=%s, MaPhong=%s, NgayThue=%s, NgayNhan=%s, NgayTra=%s, TrangThai=%s WHERE MaThue=%s"
-    values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'], ma_thue)
-    cursor.execute(sql, values)
-    conn.commit()
-    return jsonify({"message": "Cập nhật đặt phòng thành công"})
+    try:
+        data = request.json
+        sql = "UPDATE ThuePhong SET MaKhachHang=%s, MaPhong=%s, NgayThue=%s, NgayNhan=%s, NgayTra=%s, TrangThai=%s WHERE MaThue=%s"
+        values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'], ma_thue)
+        cursor.execute(sql, values)
+        conn.commit()
+        return jsonify({"message": "✅ Cập nhật đặt phòng thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 # API xóa đặt phòng
 @app.route('/thuephong/<int:ma_thue>', methods=['DELETE'])
 def delete_dat_phong(ma_thue):
-    sql = "DELETE FROM ThuePhong WHERE MaThue=%s"
-    cursor.execute(sql, (ma_thue,))
-    conn.commit()
-    return jsonify({"message": "Xóa đặt phòng thành công"})
+    try:
+        sql = "DELETE FROM ThuePhong WHERE MaThue=%s"
+        cursor.execute(sql, (ma_thue,))
+        conn.commit()
+        return jsonify({"message": "✅ Xóa đặt phòng thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 # API xuất danh sách đặt phòng ra Excel
 @app.route('/thuephong/export', methods=['GET'])
 def export_thuephong():
-    cursor.execute("SELECT * FROM ThuePhong")
-    bookings = cursor.fetchall()
-    df = pd.DataFrame(bookings, columns=['MaThue', 'MaKhachHang', 'MaPhong', 'NgayThue', 'NgayNhan', 'NgayTra', 'TrangThai'])
-    file_path = "danh_sach_thuephong.xlsx"
-    df.to_excel(file_path, index=False)
-    return send_file(file_path, as_attachment=True)
-
+    try:
+        cursor.execute("SELECT * FROM ThuePhong")
+        bookings = cursor.fetchall()
+        df = pd.DataFrame(bookings)
+        file_path = "danh_sach_thuephong.xlsx"
+        df.to_excel(file_path, index=False)
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 #----------------------------------------thuephong.html-------------------------------------------
 
 #----------------------------------------dichvu.html----------------------------------------------
-# Lấy danh sách dịch vụ
+ # Lấy danh sách dịch vụ
 @app.route("/api/dichvu", methods=["GET"])
 def get_services():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu") 
-    services = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(services)
-
-
-# Thêm dịch vụ
+     conn = get_db_connection()
+     cursor = conn.cursor(dictionary=True)
+     cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu") 
+     services = cursor.fetchall()
+     cursor.close()
+     conn.close()
+     return jsonify(services)
+ 
+ 
+ # Thêm dịch vụ
 @app.route("/api/dichvu", methods=["POST"])
 def add_service():
-    data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        print("Dữ liệu nhận được:", data)
-        if "TenDichVu" not in data or "GiaDichVu" not in data:
-            return jsonify({"error": "Thiếu dữ liệu cần thiết"}), 400
-
-        cursor.execute("INSERT INTO DichVu (TenDichVu, GiaDichVu) VALUES (%s, %s)",
-                       (data["TenDichVu"], data["GiaDichVu"]))
-        conn.commit()
-        return jsonify({"message": "Dịch vụ được thêm thành công"}), 201
-    except Exception as e:
-        conn.rollback()
-        print("Lỗi xảy ra:", str(e))
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# Cập nhật dịch vụ
+     data = request.json
+     conn = get_db_connection()
+     cursor = conn.cursor()
+ 
+     try:
+         print("Dữ liệu nhận được:", data)
+         if "TenDichVu" not in data or "GiaDichVu" not in data:
+             return jsonify({"error": "Thiếu dữ liệu cần thiết"}), 400
+ 
+         cursor.execute("INSERT INTO DichVu (TenDichVu, GiaDichVu) VALUES (%s, %s)",
+                        (data["TenDichVu"], data["GiaDichVu"]))
+         conn.commit()
+         return jsonify({"message": "Dịch vụ được thêm thành công"}), 201
+     except Exception as e:
+         conn.rollback()
+         print("Lỗi xảy ra:", str(e))
+         return jsonify({"error": str(e)}), 500
+     finally:
+         cursor.close()
+         conn.close()
+ 
+ 
+ # Cập nhật dịch vụ
 @app.route("/api/dichvu/<int:id>", methods=["PUT"])
 def update_service(id):
-    data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("UPDATE DichVu SET TenDichVu=%s, GiaDichVu=%s WHERE MaDichVu=%s",
-                       (data["TenDichVu"], data["GiaDichVu"], id))
-        conn.commit()
-        return jsonify({"message": "Cập nhật dịch vụ thành công"})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
+     data = request.json
+     conn = get_db_connection()
+     cursor = conn.cursor()
+ 
+     try:
+         cursor.execute("UPDATE DichVu SET TenDichVu=%s, GiaDichVu=%s WHERE MaDichVu=%s",
+                        (data["TenDichVu"], data["GiaDichVu"], id))
+         conn.commit()
+         return jsonify({"message": "Cập nhật dịch vụ thành công"})
+     except Exception as e:
+         conn.rollback()
+         return jsonify({"error": str(e)}), 500
+     finally:
+         cursor.close()
+         conn.close()
+ 
+ 
 @app.route("/api/dichvu/<int:id>", methods=["DELETE"])
 def delete_service(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("SELECT * FROM DichVu WHERE MaDichVu = %s", (id,))
-        service = cursor.fetchone()
-
-        if not service:
-            return jsonify({"error": "Không tìm thấy dịch vụ để xóa"}), 404
-
-        cursor.execute("DELETE FROM DichVu WHERE MaDichVu=%s", (id,))
-        conn.commit()
-
-        return jsonify({"message": "Dịch vụ đã được xóa thành công"})
-
-    except mysql.connector.IntegrityError:
-        conn.rollback()
-        return jsonify({"error": "Không thể xóa dịch vụ do ràng buộc dữ liệu"}), 400
-
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# API xuất file Excel
+     conn = get_db_connection()
+     cursor = conn.cursor()
+ 
+     try:
+         cursor.execute("SELECT * FROM DichVu WHERE MaDichVu = %s", (id,))
+         service = cursor.fetchone()
+ 
+         if not service:
+             return jsonify({"error": "Không tìm thấy dịch vụ để xóa"}), 404
+ 
+         cursor.execute("DELETE FROM DichVu WHERE MaDichVu=%s", (id,))
+         conn.commit()
+ 
+         return jsonify({"message": "Dịch vụ đã được xóa thành công"})
+ 
+     except mysql.connector.IntegrityError:
+         conn.rollback()
+         return jsonify({"error": "Không thể xóa dịch vụ do ràng buộc dữ liệu"}), 400
+ 
+     except Exception as e:
+         conn.rollback()
+         return jsonify({"error": str(e)}), 500
+ 
+     finally:
+         cursor.close()
+         conn.close()
+ 
+ 
+ # API xuất file Excel
 @app.route("/api/export_services_excel", methods=["GET"])
 def export_services_excel():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu")
-        data = cursor.fetchall()
-        column_names = [desc[0] for desc in cursor.description]
-        conn.close()
-
-        if not data:
-            return jsonify({"message": "Không có dữ liệu để xuất"}), 404
-
-        df = pd.DataFrame(data, columns=column_names)
-
-        file_path = "services_list.xlsx"
-        df.to_excel(file_path, index=False)
-
-        return send_file(file_path, as_attachment=True)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+     try:
+         conn = get_db_connection()
+         cursor = conn.cursor()
+         cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu")
+         data = cursor.fetchall()
+         column_names = [desc[0] for desc in cursor.description]
+         conn.close()
+ 
+         if not data:
+             return jsonify({"message": "Không có dữ liệu để xuất"}), 404
+ 
+         df = pd.DataFrame(data, columns=column_names)
+ 
+         file_path = "services_list.xlsx"
+         df.to_excel(file_path, index=False)
+ 
+         return send_file(file_path, as_attachment=True)
+ 
+     except Exception as e:
+         return jsonify({"error": str(e)}), 500
+     
+#----------------------------------------dichvu.html----------------------------------------------
+         
 #----------------------------------------timkiem.html----------------------------------------------
+
 # Lấy danh sách khách hàng
 @app.route('/get-customers', methods=['POST'])
-def get_customers():
-    try:
-        data = request.get_json()
-        start_date = data.get('startDate')
-        end_date = data.get('endDate')
-        order_type = data.get('orderType', 'ASC') 
-        customer_name = data.get('customerName', '')
-
-        conn = get_db_connection()  
-        cursor = conn.cursor(dictionary=True)  
-        cursor.callproc('layDSKH', [start_date, end_date, order_type, customer_name])
-        results = []
-        for result in cursor.stored_results():
-            results = result.fetchall()
-            
-        cursor.close()
-        conn.close()
-        return jsonify(results)
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+def get_customers_list():
+     try:
+         data = request.get_json()
+         start_date = data.get('startDate')
+         end_date = data.get('endDate')
+         order_type = data.get('orderType', 'ASC') 
+         customer_name = data.get('customerName', '')
+ 
+         conn = get_db_connection()  
+         cursor = conn.cursor(dictionary=True)  
+         cursor.callproc('layDSKH', [start_date, end_date, order_type, customer_name])
+         results = []
+         for result in cursor.stored_results():
+             results = result.fetchall()
+             
+         cursor.close()
+         conn.close()
+         return jsonify(results)
+ 
+     except Exception as e:
+         return jsonify({"error": str(e)}), 500
+ 
 # Lấy danh sách phòng
 @app.route('/get-room-list', methods=['POST'])
 def get_room_list():
-    try:
-        data = request.json
-        soPhong = data.get('soPhong', None)
-        tenLoai = data.get('tenLoai', None)
-        trangThai = data.get('trangThai', "")
-
-        conn = get_db_connection()
-        conn.set_charset_collation('utf8mb4', 'utf8mb4_unicode_ci')  # Đảm bảo UTF-8
-        cursor = conn.cursor(dictionary=True)
-
-        # Chỉ cho phép "Trống" hoặc "Đang sử dụng", nếu không thì giữ rỗng
-        if trangThai not in ["Trống", "Đang sử dụng"]:
-            trangThai = ""
-
-        print("Số phòng:", soPhong)
-        print("Loại phòng:", tenLoai)
-        print("Trạng thái:", trangThai)
-
-        cursor.callproc('layDanhSachPhong', (soPhong, tenLoai, trangThai))
-        results = []
-        for result in cursor.stored_results():
-            results.extend(result.fetchall())
-
-        # Chuyển đổi kiểu Decimal thành float
-        for item in results:
-            for key, value in item.items():
-                if isinstance(value, Decimal):
-                    item[key] = float(value)
-
-        cursor.close()
-        conn.close()
-
-        return json.dumps({"success": True, "data": results}, ensure_ascii=False), 200, {'Content-Type': 'application/json; charset=utf-8'}
-
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
+     try:
+         data = request.json
+         soPhong = data.get('soPhong', None)
+         tenLoai = data.get('tenLoai', None)
+         trangThai = data.get('trangThai', "")
+ 
+         conn = get_db_connection()
+         conn.set_charset_collation('utf8mb4', 'utf8mb4_unicode_ci')  # Đảm bảo UTF-8
+         cursor = conn.cursor(dictionary=True)
+ 
+         # Chỉ cho phép "Trống" hoặc "Đang sử dụng", nếu không thì giữ rỗng
+         if trangThai not in ["Trống", "Đang sử dụng"]:
+             trangThai = ""
+ 
+         print("Số phòng:", soPhong)
+         print("Loại phòng:", tenLoai)
+         print("Trạng thái:", trangThai)
+ 
+         cursor.callproc('layDanhSachPhong', (soPhong, tenLoai, trangThai))
+         results = []
+         for result in cursor.stored_results():
+             results.extend(result.fetchall())
+ 
+         # Chuyển đổi kiểu Decimal thành float
+         for item in results:
+             for key, value in item.items():
+                 if isinstance(value, Decimal):
+                     item[key] = float(value)
+ 
+         cursor.close()
+         conn.close()
+ 
+         return json.dumps({"success": True, "data": results}, ensure_ascii=False), 200, {'Content-Type': 'application/json; charset=utf-8'}
+ 
+     except Exception as e:
+         return jsonify({"success": False, "message": str(e)}), 500
+ 
 # Lấy danh sách nhân viên
 @app.route('/get-employees', methods=['POST'])
 def get_employees():
-    try:
-        data = request.get_json()
-        ten_nhan_vien = data.get('tenNhanVien')
-        so_dien_thoai = data.get('soDienThoai')
-
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.callproc('layDanhSachNhanVien', [ten_nhan_vien, so_dien_thoai])
-
-        results = []
-        for result in cursor.stored_results():
-            results = result.fetchall()
-
-        cursor.close()
-        conn.close()
-
-        return jsonify(results), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+     try:
+         data = request.get_json()
+         ten_nhan_vien = data.get('tenNhanVien')
+         so_dien_thoai = data.get('soDienThoai')
+ 
+         conn = get_db_connection()
+         cursor = conn.cursor(dictionary=True)
+         cursor.callproc('layDanhSachNhanVien', [ten_nhan_vien, so_dien_thoai])
+ 
+         results = []
+         for result in cursor.stored_results():
+             results = result.fetchall()
+ 
+         cursor.close()
+         conn.close()
+ 
+         return jsonify(results), 200
+ 
+     except Exception as e:
+         return jsonify({"error": str(e)}), 500
+     
+#----------------------------------------timkiem.html----------------------------------------------
+ 
 
 if __name__ == '__main__':
     app.run(debug=True)

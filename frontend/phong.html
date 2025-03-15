@@ -80,18 +80,19 @@
             <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
             <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
             <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+            <li><a href="./timkiem.html">Tìm kiếm</a></li>
             <li><a href="./thongke.html">Thống kê</a></li>
             <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
         </ul>
     </div>
     <div class="content">
         <h1>Danh sách phòng</h1>
-        <table>
+        <table border="1">
             <thead>
                 <tr>
                     <th>Mã phòng</th>
-                    <th>Loại phòng</th>
-                    <th>Giá</th>
+                    <th>Mã loại</th>
+                    <th>Số phòng</th>
                     <th>Trạng thái</th>
                     <th>Hành động</th>
                 </tr>
@@ -103,56 +104,68 @@
 
         <h2>Thông tin phòng</h2>
         <label>Mã phòng: <input type="text" id="roomId"></label>
-        <label>Loại phòng: <input type="text" id="roomType"></label>
-        <label>Giá: <input type="number" id="roomPrice"></label>
-        <label>Trạng thái: <input type="text" id="roomStatus"></label>
+        <label>Mã loại: <input type="text" id="roomTypeCode"></label>
+        <label>Số Phòng: <input type="number" id="roomNum"></label>
+        <label>Trạng thái:</label>
+        <select id="roomStatus">
+            <option value="Trống">Trống</option>
+            <option value="Đang sử dụng">Đang sử dụng</option>
+        </select>
+
         <div class="button-group">
             <button onclick="addRoom()">Thêm</button>
             <button onclick="updateRoom()">Sửa</button>
             <button onclick="deleteRoom()">Xóa</button>
             <button onclick="exportRoomExcel()">Xuất Excel</button>
+            <button onclick="clearForm()">Làm mới</button>
         </div>
     </div>
 
     <script>
         function fetchRooms() {
-            $.get("/api/rooms", function(data) {
+            $.get("http://127.0.0.1:5000/api/phong", function(data) {
                 let rows = "";
                 data.forEach(room => {
                     rows += `<tr>
                         <td>${room.MaPhong}</td>
-                        <td>${room.LoaiPhong}</td>
-                        <td>${room.Gia}</td>
+                        <td>${room.MaLoai}</td>
+                        <td>${room.SoPhong}</td>
                         <td>${room.TrangThai}</td>
                         <td>
-                            <button onclick="fillForm('${room.MaPhong}', '${room.LoaiPhong}', '${room.Gia}', '${room.TrangThai}')">Chọn</button>
+                            <button onclick="fillForm('${room.MaPhong}', '${room.MaLoai}', '${room.SoPhong}', '${room.TrangThai}')">Chọn</button>
                         </td>
                     </tr>`;
                 });
                 $("#roomsTableBody").html(rows);
+            }).fail(function(xhr){
+                    console.error("Lõi khi gọi API /Phong: ", xhr.responseText);
+                    alert("Không thể tải danh sách phòng!");
             });
         }
 
-        function fillForm(id, type, price, status) {
+        function fillForm(id, type, roomnumber, status) {
             $("#roomId").val(id);
-            $("#roomType").val(type);
-            $("#roomPrice").val(price);
+            $("#roomTypeCode").val(type);
+            $("#roomNum").val(roomnumber);
             $("#roomStatus").val(status);
         }
 
         function addRoom() {
             let data = {
-                MaPhong: $("#roomId").val().trim(),
-                LoaiPhong: $("#roomType").val().trim(),
-                Gia: $("#roomPrice").val().trim(),
+                MaLoai: $("#roomTypeCode").val().trim(),
+                SoPhong: $("#roomNum").val().trim(),
                 TrangThai: $("#roomStatus").val().trim()
             };
+            
+            if (!validateRoomData(data)) return;
+            
             $.ajax({
-                url: "/api/rooms",
+                url: "http://127.0.0.1:5000/api/phong",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(data),
                 success: function() {
+                    alert("Thêm phòng thành công!");
                     fetchRooms();
                     clearForm();
                 }
@@ -166,12 +179,15 @@
                 return;
             }
             let data = {
-                LoaiPhong: $("#roomType").val().trim(),
-                Gia: $("#roomPrice").val().trim(),
+                MaLoai: $("#roomTypeCode").val().trim(),
+                SoPhong: $("#roomNum").val().trim(),
                 TrangThai: $("#roomStatus").val().trim()
             };
+
+            if (!validateRoomData(data)) return;
+            
             $.ajax({
-                url: `/api/rooms/${id}`,
+                url: `http://127.0.0.1:5000/api/phong/${id}`,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
@@ -191,7 +207,7 @@
             }
             if (!confirm("Bạn có chắc muốn xóa phòng này?")) return;
             $.ajax({
-                url: `/api/rooms/${id}`,
+                url: `http://127.0.0.1:5000/api/phong/${id}`,
                 type: "DELETE",
                 success: function() {
                     alert("Xóa thành công!");
@@ -202,17 +218,29 @@
         }
 
         function exportRoomExcel() {
-            window.location.href = "/api/export_rooms_excel";
+            window.location.href = "http://127.0.0.1:5000/api/phong/export";
         }
 
         function clearForm() {
             $("#roomId").val("");
-            $("#roomType").val("");
-            $("#roomPrice").val("");
+            $("#roomTypeCode").val("");
+            $("#roomNum").val("");
             $("#roomStatus").val("");
         }
 
         $(document).ready(fetchRooms);
+        
+        function validateRoomData(data) {
+            if (!data.MaLoai || !data.SoPhong || !data.TrangThai) {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return false;
+            }
+            if (!["Trống", "Đang sử dụng"].includes(data.TrangThai)) {
+                alert("Trạng thái chỉ được là 'Trống' hoặc 'Đang sử dụng'!");
+                return false;
+            }
+            return true;
+        }
 
         function handleLogout() {
             localStorage.removeItem("token");

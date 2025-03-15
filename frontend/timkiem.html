@@ -83,7 +83,7 @@
             <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
             <li><a href="./thuephong.html">Quản lý thuê phòng</a></li>
             <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
-            <li><a href="./timkiem.html">Tìm kiếm</a></li>
+            <li class="active"><a href="./timkiem.html">Tìm kiếm</a></li>
             <li><a href="./thongke.html">Thống kê</a></li>
             <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
         </ul>
@@ -208,7 +208,7 @@
             if (startDate) requestBody.startDate = startDate;
             if (endDate) requestBody.endDate = endDate;
 
-            fetch('http://localhost:5000/get-customers', {
+            fetch('http://127.0.0.1:5000/get-customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
@@ -256,7 +256,7 @@
                 tenNhanVien: tenNhanVien || null, 
                 soDienThoai: soDienThoai || null
             };
-            fetch('http://localhost:5000/get-employees', {
+            fetch('http://127.0.0.1:5000/get-employees', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -302,7 +302,7 @@
 
         let payload = { soPhong: soPhong || null, tenLoai: loaiPhong || null, trangThai };
         try {
-            const response = await fetch("http://localhost:5000/get-room-list", {
+            const response = await fetch("http://127.0.0.1:5000/get-room-list", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

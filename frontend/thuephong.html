@@ -69,6 +69,7 @@
             <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
             <li class="active"><a href="./thuephong.html">Quản lý thuê phòng</a></li>
             <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+            <li><a href="./timkiem.html">Tìm kiếm</a></li>
             <li><a href="./thongke.html">Thống kê</a></li>
             <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
         </ul>
@@ -81,6 +82,7 @@
                     <th>Mã thuê</th>
                     <th>Mã phòng</th>
                     <th>Mã khách hàng</th>
+                    <th>Ngày thuê</th>
                     <th>Ngày nhận</th>
                     <th>Ngày trả</th>
                     <th>Trạng thái</th>
@@ -96,113 +98,204 @@
         <label>Mã thuê: <input type="text" id="rentId"></label>
         <label>Mã phòng: <input type="text" id="roomId"></label>
         <label>Mã khách hàng: <input type="text" id="customerId"></label>
-        <label>Ngày nhận: <input type="date" id="checkIn"></label>
-        <label>Ngày trả: <input type="date" id="checkOut"></label>
-        <label>Trạng thái: <input type="text" id="rentStatus"></label>
+        <label>Ngày thuê: <input type="datetime-local" id="rentDate"></label>
+        <label>Ngày nhận: <input type="datetime-local" id="checkIn"></label>
+        <label>Ngày trả: <input type="datetime-local" id="checkOut"></label>
+        <label>Trạng thái:</label>
+        <select id="rentStatus">
+            <option value="Đã đặt">Đã đặt</option>
+            <option value="Đang ở">Đang ở</option>
+            <option value="Đang ở">Đã trả</option>
+        </select>
+
         <div class="button-group">
             <button onclick="addRent()">Thêm</button>
             <button onclick="updateRent()">Sửa</button>
             <button onclick="deleteRent()">Xóa</button>
             <button onclick="exportRentExcel()">Xuất Excel</button>
+            <button onclick="clearForm()">Làm mới</button>
         </div>
     </div>
 
     <script>
         function fetchRentals() {
-            $.get("/api/rentals", function(data) {
+            $.get("http://127.0.0.1:5000/thuephong", function(data) {
                 let rows = "";
                 data.forEach(rent => {
                     rows += `<tr>
                         <td>${rent.MaThue}</td>
                         <td>${rent.MaPhong}</td>
                         <td>${rent.MaKhachHang}</td>
-                        <td>${rent.NgayNhan}</td>
-                        <td>${rent.NgayTra}</td>
+                        <td>${formatDateTime(rent.NgayThue)}</td>
+                        <td>${formatDateTime(rent.NgayNhan)}</td>
+                        <td>${formatDateTime(rent.NgayTra)}</td>
                         <td>${rent.TrangThai}</td>
                         <td>
-                            <button onclick="fillForm('${rent.MaThue}', '${rent.MaPhong}', '${rent.MaKhachHang}', '${rent.NgayNhan}', '${rent.NgayTra}', '${rent.TrangThai}')">Chọn</button>
+                            <button onclick="fillForm('${rent.MaThue}', '${rent.MaPhong}', '${rent.MaKhachHang}', '${rent.NgayThue}', '${rent.NgayNhan}', '${rent.NgayTra}', '${rent.TrangThai}')">Chọn</button>
                         </td>
                     `;
                 });
                 $("#rentTableBody").html(rows);
+            }).fail(function(xrh) {
+                console.error("Lỗi API /thuephong", xrh.responseText);
+                alert("Không thể tải danh sách đặt phòng!");
             });
         }
 
-        function fillForm(id, room, customer, checkIn, checkOut, status) {
+        function fillForm(id, room, customer, rentDate, checkIn, checkOut, status) {
             $("#rentId").val(id);
             $("#roomId").val(room);
             $("#customerId").val(customer);
-            $("#checkIn").val(checkIn);
-            $("#checkOut").val(checkOut);
+            $("#rentDate").val(formatDateTime(rentDate));
+            $("#checkIn").val(formatDateTime(checkIn));
+            $("#checkOut").val(formatDateTime(checkOut));
             $("#rentStatus").val(status);
         }
 
+        // Thêm thuê phòng
         function addRent() {
             let data = {
-                MaPhong: $("#roomId").val().trim(),
                 MaKhachHang: $("#customerId").val().trim(),
-                NgayNhan: $("#checkIn").val().trim(),
-                NgayTra: $("#checkOut").val().trim(),
+                MaPhong: $("#roomId").val().trim(),
+                NgayThue: $("#rentDate").val().trim() + ":00",
+                NgayNhan: $("#checkIn").val().trim() + ":00",
+                NgayTra: $("#checkOut").val().trim() + ":00",
                 TrangThai: $("#rentStatus").val().trim()
             };
+    
+            if (!validateRentData(data)) return;
+    
             $.ajax({
-                url: "/api/rentals",
+                url: "http://127.0.0.1:5000/thuephong",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(data),
-                success: function() {
+                success: function(response) {
+                    alert("✅ Thêm đặt phòng thành công!");
                     fetchRentals();
                     clearForm();
                 }
+            }).fail(function(xhr) {
+                alert("❌ Lỗi khi thêm đặt phòng!");
+                console.error(xhr.responseText);
             });
         }
 
+        // Sửa thuê phòng
         function updateRent() {
             let id = $("#rentId").val().trim();
             if (!id) {
-                alert("Vui lòng chọn một đơn thuê để sửa!");
+                alert("⚠ Vui lòng chọn một đơn thuê để sửa!");
                 return;
             }
+    
             let data = {
-                NgayNhan: $("#checkIn").val().trim(),
-                NgayTra: $("#checkOut").val().trim(),
+                MaKhachHang: $("#customerId").val().trim(),
+                MaPhong: $("#roomId").val().trim(),
+                NgayThue: $("#rentDate").val().trim() + ":00",
+                NgayNhan: $("#checkIn").val().trim() + ":00",
+                NgayTra: $("#checkOut").val().trim() + ":00",
                 TrangThai: $("#rentStatus").val().trim()
             };
+    
+            if (!validateRentData(data)) return;
+    
             $.ajax({
-                url: `/api/rentals/${id}`,
+                url: `http://127.0.0.1:5000/thuephong/${id}`,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(data),
                 success: function() {
+                    alert("✅ Cập nhật đặt phòng thành công!");
                     fetchRentals();
                     clearForm();
                 }
+            }).fail(function(xhr) {
+                alert("❌ Lỗi khi cập nhật đặt phòng!");
+                console.error(xhr.responseText);
             });
         }
 
+
+        // Xóa thuê phòng
         function deleteRent() {
             let id = $("#rentId").val().trim();
             if (!id) {
-                alert("Vui lòng chọn một đơn thuê để xóa!");
+                alert("⚠ Vui lòng chọn một đơn thuê để xóa!");
                 return;
             }
+    
+            if (!confirm("⚠ Bạn có chắc muốn xóa đơn thuê này không?")) return;
+    
             $.ajax({
-                url: `/api/rentals/${id}`,
+                url: `http://127.0.0.1:5000/thuephong/${id}`,
                 type: "DELETE",
                 success: function() {
+                    alert("✅ Xóa đặt phòng thành công!");
                     fetchRentals();
                     clearForm();
                 }
+            }).fail(function(xhr) {
+                alert("❌ Lỗi khi xóa đặt phòng!");
+                console.error(xhr.responseText);
             });
         }
 
-        function exportRentExcel() {
-            window.location.href = "/api/export_rentals_excel";
-             localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            alert("✅ Đã đăng xuất!");
-            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+        // Cập nhập ngày giờ
+        function formatDateTime(dateString) {
+            if (!dateString) return ""; // Nếu không có giá trị thì return rỗng
+        
+            let date = new Date(dateString);
+            if (isNaN(date.getTime())) return ""; // Nếu ngày không hợp lệ, return rỗng
+        
+            let year = date.getFullYear();
+            let month = String(date.getMonth() + 1).padStart(2, '0');
+            let day = String(date.getDate()).padStart(2, '0');
+            let hours = String(date.getHours()).padStart(2, '0');
+            let minutes = String(date.getMinutes()).padStart(2, '0');
+        
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
         }
+        
+
+        // Xuất excel
+        function exportRentExcel() {
+            window.location.href = "http://127.0.0.1:5000/thuephong/export";
+        }
+
+
+        // Xóa form
+        function clearForm() {
+            $("#rentId").val("");
+            $("#roomId").val("");
+            $("#customerId").val("");
+            $("#rentDate").val("");
+            $("#checkIn").val("");
+            $("#checkOut").val("");
+            $("#rentStatus").val("");
+        }
+
+        function validateRentData(data) {
+            if (!data.MaKhachHang || !data.MaPhong || !data.NgayThue || !data.NgayNhan || !data.NgayTra || !data.TrangThai) {
+                alert("⚠ Vui lòng nhập đầy đủ thông tin đặt phòng!");
+                return false;
+            }
+
+            let rentDate = new Date(data.NgayThue);
+            let checkInDate = new Date(data.NgayNhan);
+            let checkOutDate = new Date(data.NgayTra);
+
+            if (rentDate > checkInDate) {
+                alert("⚠ Ngày nhận phải lớn hơn hoặc bằng ngày thuê!");
+                return false;
+            }
+            if (checkInDate >= checkOutDate) {
+                alert("⚠ Ngày trả phải lớn hơn ngày nhận!");
+                return false;
+            }
+            return true;
+        }
+
 
         $(document).ready(fetchRentals);
 
