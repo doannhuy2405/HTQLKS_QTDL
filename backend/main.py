@@ -627,94 +627,110 @@ def export_services_excel():
 #----------------------------------------dichvu.html----------------------------------------------
          
 #----------------------------------------timkiem.html----------------------------------------------
-
 # Lấy danh sách khách hàng
 @app.route('/get-customers', methods=['POST'])
-def get_customers_list():
-     try:
-         data = request.get_json()
-         start_date = data.get('startDate')
-         end_date = data.get('endDate')
-         order_type = data.get('orderType', 'ASC') 
-         customer_name = data.get('customerName', '')
- 
-         conn = get_db_connection()  
-         cursor = conn.cursor(dictionary=True)  
-         cursor.callproc('layDSKH', [start_date, end_date, order_type, customer_name])
-         results = []
-         for result in cursor.stored_results():
-             results = result.fetchall()
-             
-         cursor.close()
-         conn.close()
-         return jsonify(results)
- 
-     except Exception as e:
-         return jsonify({"error": str(e)}), 500
- 
+def get_customers():
+    try:
+        data = request.get_json()
+        start_date = data.get('startDate')
+        end_date = data.get('endDate')
+        order_type = data.get('orderType', 'ASC')  # Mặc định 'ASC' nếu không có
+        customer_name = data.get('customerName', '')
+
+        conn = get_db_connection() 
+        cursor = conn.cursor(dictionary=True) 
+
+        # Gọi Stored Procedure
+        cursor.callproc('layDSKH', [start_date, end_date, order_type, customer_name])
+
+        # Lấy kết quả
+        results = []
+        for result in cursor.stored_results():
+            results = result.fetchall()
+
+        # Đóng kết nối
+        cursor.close()
+        conn.close()
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Lấy danh sách phòng
 @app.route('/get-room-list', methods=['POST'])
 def get_room_list():
-     try:
-         data = request.json
-         soPhong = data.get('soPhong', None)
-         tenLoai = data.get('tenLoai', None)
-         trangThai = data.get('trangThai', "")
- 
-         conn = get_db_connection()
-         conn.set_charset_collation('utf8mb4', 'utf8mb4_unicode_ci')  # Đảm bảo UTF-8
-         cursor = conn.cursor(dictionary=True)
- 
-         # Chỉ cho phép "Trống" hoặc "Đang sử dụng", nếu không thì giữ rỗng
-         if trangThai not in ["Trống", "Đang sử dụng"]:
-             trangThai = ""
- 
-         print("Số phòng:", soPhong)
-         print("Loại phòng:", tenLoai)
-         print("Trạng thái:", trangThai)
- 
-         cursor.callproc('layDanhSachPhong', (soPhong, tenLoai, trangThai))
-         results = []
-         for result in cursor.stored_results():
-             results.extend(result.fetchall())
- 
-         # Chuyển đổi kiểu Decimal thành float
-         for item in results:
-             for key, value in item.items():
-                 if isinstance(value, Decimal):
-                     item[key] = float(value)
- 
-         cursor.close()
-         conn.close()
- 
-         return json.dumps({"success": True, "data": results}, ensure_ascii=False), 200, {'Content-Type': 'application/json; charset=utf-8'}
- 
-     except Exception as e:
-         return jsonify({"success": False, "message": str(e)}), 500
- 
-# Lấy danh sách nhân viên
+    try:
+        data = request.json
+        soPhong = data.get('soPhong', None)
+        tenLoai = data.get('tenLoai', None)
+        trangThai = data.get('trangThai', "")
+
+        conn = get_db_connection()
+        conn.set_charset_collation('utf8mb4', 'utf8mb4_unicode_ci')  # Đảm bảo UTF-8
+        cursor = conn.cursor(dictionary=True)
+
+        # Chỉ cho phép "Trống" hoặc "Đang sử dụng", nếu không thì giữ rỗng
+        if trangThai not in ["Trống", "Đang sử dụng"]:
+            trangThai = ""
+
+        print("Số phòng:", soPhong)
+        print("Loại phòng:", tenLoai)
+        print("Trạng thái:", trangThai)
+
+        # Gọi stored procedure
+        cursor.callproc('layDanhSachPhong', (soPhong, tenLoai, trangThai))
+
+        # Lấy kết quả từ stored procedure
+        results = []
+        for result in cursor.stored_results():
+            results.extend(result.fetchall())
+
+        # Chuyển đổi kiểu Decimal thành float
+        for item in results:
+            for key, value in item.items():
+                if isinstance(value, Decimal):
+                    item[key] = float(value)
+
+        cursor.close()
+        conn.close()
+
+        return json.dumps({"success": True, "data": results}, ensure_ascii=False), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+#Lấy danh sách nhân viên
 @app.route('/get-employees', methods=['POST'])
 def get_employees():
-     try:
-         data = request.get_json()
-         ten_nhan_vien = data.get('tenNhanVien')
-         so_dien_thoai = data.get('soDienThoai')
- 
-         conn = get_db_connection()
-         cursor = conn.cursor(dictionary=True)
-         cursor.callproc('layDanhSachNhanVien', [ten_nhan_vien, so_dien_thoai])
- 
-         results = []
-         for result in cursor.stored_results():
-             results = result.fetchall()
- 
-         cursor.close()
-         conn.close()
- 
-         return jsonify(results), 200
- 
-     except Exception as e:
-         return jsonify({"error": str(e)}), 500
+    try:
+        data = request.get_json()
+        ten_nhan_vien = data.get('tenNhanVien')
+        so_dien_thoai = data.get('soDienThoai')
+
+        print("Dữ liệu đầu vào:", ten_nhan_vien, so_dien_thoai)
+
+        # Kết nối đến database
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Gọi Stored Procedure
+        cursor.callproc('layDanhSachNhanVien', [ten_nhan_vien, so_dien_thoai])
+
+        # Lấy kết quả
+        results = []
+        for result in cursor.stored_results():
+            results = result.fetchall()
+
+
+        # Đóng kết nối
+        cursor.close()
+        conn.close()
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
      
 #----------------------------------------timkiem.html----------------------------------------------
  
