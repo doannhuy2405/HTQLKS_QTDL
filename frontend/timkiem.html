@@ -208,7 +208,7 @@
             if (startDate) requestBody.startDate = startDate;
             if (endDate) requestBody.endDate = endDate;
 
-            fetch('http://127.0.0.1:5000/get-customers', {
+            fetch('http://localhost:5000/get-customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
@@ -218,10 +218,10 @@
                 return response.json();
             })
             .then(data => {
-                console.log("Dữ liệu API trả về:", data); 
+                console.log("Dữ liệu API trả về:", data);
 
                 let table = document.getElementById("ketQuaKhachHang");
-                table.innerHTML = ""; 
+                table.innerHTML = ""; // Xóa nội dung cũ
 
                 if (!Array.isArray(data) || data.length === 0) {
                     table.innerHTML = "<tr><td colspan='7'>Không tìm thấy khách hàng</td></tr>";
@@ -249,14 +249,18 @@
             });
         }
 
+
+
         function timKiemNhanVien() {
             const tenNhanVien = document.getElementById('ten_nhan_vien').value.trim();
             const soDienThoai = document.getElementById('sdt_nhan_vien').value.trim();
+            
             const payload = {
                 tenNhanVien: tenNhanVien || null, 
                 soDienThoai: soDienThoai || null
             };
-            fetch('http://127.0.0.1:5000/get-employees', {
+
+            fetch('http://localhost:5000/get-employees', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -274,7 +278,7 @@
 
         function hienThiKetQua(data) {
             const ketQuaNhanVien = document.getElementById('ketQuaNhanVien');
-            ketQuaNhanVien.innerHTML = ''; 
+            ketQuaNhanVien.innerHTML = ''; // Xóa kết quả cũ
 
             if (!data || data.length === 0) {
                 ketQuaNhanVien.innerHTML = '<tr><td colspan="4">Không tìm thấy nhân viên nào</td></tr>';
@@ -297,12 +301,18 @@
         const soPhong = document.getElementById("so_phong").value.trim();
         const loaiPhong = document.getElementById("loai_phong").value.trim();
         let trangThai = document.getElementById("trangThai").value.trim(); 
+
         if (trangThai === "Tất cả") trangThai = "";
         else if (trangThai === "trong") trangThai = "Trống"; 
 
         let payload = { soPhong: soPhong || null, tenLoai: loaiPhong || null, trangThai };
+
+        // Debug log
+        console.log("📤 Giá trị trangThai trước khi gửi API:", trangThai);
+        console.log("📤 Payload gửi API:", payload);
+
         try {
-            const response = await fetch("http://127.0.0.1:5000/get-room-list", {
+            const response = await fetch("http://localhost:5000/get-room-list", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -316,7 +326,7 @@
             console.log("Dữ liệu nhận từ API:", data.data);
             hienThiKetQuaPhong(data.data);
         } catch (error) {
-            console.error(" Lỗi khi tìm kiếm phòng:", error);
+            console.error("Lỗi khi tìm kiếm phòng:", error);
             document.getElementById("ketQuaPhong").innerHTML =
                 "<tr><td colspan='6'>Lỗi khi tải dữ liệu</td></tr>";
             }
@@ -324,9 +334,9 @@
 
         function hienThiKetQuaPhong(data) {
             const ketQuaPhong = document.getElementById("ketQuaPhong");
-            ketQuaPhong.innerHTML = ""; 
+            ketQuaPhong.innerHTML = ""; // Xóa kết quả cũ
 
-            console.log(" Dữ liệu trước khi hiển thị:", data); 
+            console.log(" Dữ liệu trước khi hiển thị:", data); // Kiểm tra console
 
             if (!Array.isArray(data) || data.length === 0) {
                 ketQuaPhong.innerHTML =
@@ -336,7 +346,7 @@
 
             // Hiển thị danh sách phòng
             data.forEach((phong) => {
-                console.log(" Thêm phòng vào bảng:", phong); 
+                console.log(" Thêm phòng vào bảng:", phong); // Debug dữ liệu hiển thị
 
                 const row = document.createElement("tr");
                 row.innerHTML = `
@@ -370,17 +380,20 @@
             saveAs(data, `${fileName}.xlsx`);
         }
 
-        // Hàm lấy dữ liệu từ bảng 
+        // Hàm lấy dữ liệu từ bảng
         function getTableData(table) {
             let data = [];
+
+            // Lấy tiêu đề cột từ <thead>
             let headers = [];
             let headerRow = table.querySelector("thead tr");
             if (headerRow) {
                 let headerCells = headerRow.querySelectorAll("th");
                 headerCells.forEach(th => headers.push(th.innerText.trim()));
-                data.push(headers); 
+                data.push(headers); // Thêm tiêu đề vào hàng đầu tiên
             }
 
+            // Lấy dữ liệu từ <tbody>
             let rows = table.querySelectorAll("tbody tr");
             rows.forEach(row => {
                 let rowData = [];
