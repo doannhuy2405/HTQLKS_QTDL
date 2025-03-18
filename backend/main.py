@@ -1,9 +1,11 @@
+import json
 import bcrypt # type: ignore
 import re
 import pymysql # type: ignore
 import pandas as pd # type: ignore
 from flask import Flask, request, jsonify, render_template, send_file # type: ignore
 from flask_cors import CORS  # type: ignore # Import flask-cors
+from decimal import Decimal
 
 
 app = Flask(__name__)
@@ -383,9 +385,18 @@ def register():
 # API lấy danh sách phòng
 @app.route('/api/phong', methods=['GET'])
 def get_phong():
-    cursor.execute("SELECT * FROM Phong")
-    rooms = cursor.fetchall()
-    return jsonify(rooms)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Phong")
+        rooms = cursor.fetchall()
+        return jsonify(rooms)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 # API thêm phòng
@@ -432,12 +443,24 @@ def delete_phong(ma_phong):
 # API xuất danh sách phòng ra Excel
 @app.route('/api/phong/export', methods=['GET'])
 def export_phong():
-    cursor.execute("SELECT * FROM Phong")
-    rooms = cursor.fetchall()
-    df = pd.DataFrame(rooms, columns=['MaPhong', 'MaLoai', 'SoPhong', 'TrangThai'])
-    file_path = "danh_sach_phong.xlsx"
-    df.to_excel(file_path, index=False)
-    return send_file(file_path, as_attachment=True)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT MaPhong, MaLoai, SoPhong, TrangThai FROM Phong")
+        rooms = cursor.fetchall()
+
+        # Định nghĩa tên cột đúng thứ tự
+        df = pd.DataFrame(rooms, columns=['Mã phòng', 'Mã loại', 'Số phòng', 'Trạng thái'])
+
+        file_path = "danh_sach_phong.xlsx"
+        df.to_excel(file_path, index=False)
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 #----------------------------------------phong.html-------------------------------------------
@@ -449,15 +472,32 @@ def export_phong():
 def dat_phong():
     try:
         data = request.json
-        sql = "INSERT INTO ThuePhong (MaKhachHang, MaPhong, NgayThue, NgayNhan, NgayTra, TrangThai) VALUES (%s, %s, %s, %s, %s, %s)"
+
+        # Kiểm tra trạng thái phòng
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT TrangThai FROM Phong WHERE MaPhong = %s", (data['MaPhong'],))
+        phong = cursor.fetchone()
+        
+        if not phong:
+            return jsonify({"error": "⚠️ Phòng không tồn tại!"}), 404
+        if phong[0] != "Trống":
+            return jsonify({"error": "⚠️ Phòng đã có khách đặt trước hoặc đang sử dụng!"}), 400
+
+        # Nếu phòng trống, thực hiện đặt phòng
+        sql = """INSERT INTO ThuePhong (MaKhachHang, MaPhong, NgayThue, NgayNhan, NgayTra, TrangThai) 
+                 VALUES (%s, %s, %s, %s, %s, %s)"""
         values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'])
         cursor.execute(sql, values)
         conn.commit()
+        
         return jsonify({"message": "✅ Đặt phòng thành công!"}), 201
     except Exception as e:
-        if "45000" in str(e):  # Lỗi từ trigger
-            return jsonify({"error": "⚠️ Phòng đã có khách đặt trước hoặc đang sử dụng!"}), 400
         return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
     
 
 # API lấy danh sách đặt phòng
@@ -476,13 +516,18 @@ def get_dat_phong():
 def update_dat_phong(ma_thue):
     try:
         data = request.json
-        sql = "UPDATE ThuePhong SET MaKhachHang=%s, MaPhong=%s, NgayThue=%s, NgayNhan=%s, NgayTra=%s, TrangThai=%s WHERE MaThue=%s"
-        values = (data['MaKhachHang'], data['MaPhong'], data['NgayThue'], data['NgayNhan'], data['NgayTra'], data['TrangThai'], ma_thue)
-        cursor.execute(sql, values)
+        cursor.execute("UPDATE ThuePhong SET TrangThai=%s WHERE MaThue=%s", (data['TrangThai'], ma_thue))
         conn.commit()
-        return jsonify({"message": "✅ Cập nhật đặt phòng thành công!"}), 200
+
+        # Nếu trạng thái là "Đã Trả", cập nhật phòng về "Trống"
+        if data['TrangThai'] == "Đã trả":
+            cursor.execute("UPDATE Phong SET TrangThai='Trống' WHERE MaPhong=(SELECT MaPhong FROM ThuePhong WHERE MaThue=%s)", (ma_thue,))
+            conn.commit()
+
+        return jsonify({"message": "✅ Cập nhật thành công!"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 
 # API xóa đặt phòng
@@ -517,7 +562,7 @@ def export_thuephong():
 @app.route("/api/dichvu", methods=["GET"])
 def get_services():
      conn = get_db_connection()
-     cursor = conn.cursor(dictionary=True)
+     cursor = conn.cursor()
      cursor.execute("SELECT MaDichVu, TenDichVu, GiaDichVu FROM DichVu") 
      services = cursor.fetchall()
      cursor.close()
@@ -587,7 +632,7 @@ def delete_service(id):
  
          return jsonify({"message": "Dịch vụ đã được xóa thành công"})
  
-     except mysql.connector.IntegrityError:
+     except mysql.connector.IntegrityError: # type: ignore
          conn.rollback()
          return jsonify({"error": "Không thể xóa dịch vụ do ràng buộc dữ liệu"}), 400
  
@@ -629,33 +674,51 @@ def export_services_excel():
 #----------------------------------------timkiem.html----------------------------------------------
 # Lấy danh sách khách hàng
 @app.route('/get-customers', methods=['POST'])
-def get_customers():
+def get_customers_list():
     try:
         data = request.get_json()
-        start_date = data.get('startDate')
-        end_date = data.get('endDate')
-        order_type = data.get('orderType', 'ASC')  # Mặc định 'ASC' nếu không có
+        print("Dữ liệu nhận được:", data, flush=True)
+
+        start_date = data.get('startDate', None)
+        end_date = data.get('endDate', None)
+        order_type = data.get('orderType', 'ASC')
         customer_name = data.get('customerName', '')
 
-        conn = get_db_connection() 
-        cursor = conn.cursor(dictionary=True) 
+        conn = get_db_connection()
+        cursor = conn.cursor()  # Trả về dạng dict
+
+        print(f"startDate: {start_date}, endDate: {end_date}, orderType: {order_type}, customerName: {customer_name}", flush=True)
 
         # Gọi Stored Procedure
-        cursor.callproc('layDSKH', [start_date, end_date, order_type, customer_name])
+        try:
+            cursor.callproc('layDSKH', [start_date, end_date, order_type, customer_name])
+            print("Gọi Stored Procedure thành công!", flush=True)
+        except Exception as e:
+            print(f"Lỗi khi gọi Stored Procedure: {str(e)}", flush=True)
+            return jsonify({"error": f"Lỗi khi gọi Stored Procedure: {str(e)}"}), 500
 
-        # Lấy kết quả
-        results = []
-        for result in cursor.stored_results():
-            results = result.fetchall()
+        # DÙNG cursor.fetchall() THAY CHO stored_results()
+        results = cursor.fetchall()
+        print("Dữ liệu từ Stored Procedure:", results, flush=True)
+
+        # # Chuyển kiểu Decimal thành float (nếu có)
+        # for item in results:
+        #     for key, value in item.items():
+        #         if isinstance(value, Decimal):
+        #             item[key] = float(value)
 
         # Đóng kết nối
         cursor.close()
         conn.close()
 
+        print("Kết quả JSON gửi về:", results, flush=True)
         return jsonify(results)
 
     except Exception as e:
+        print("Lỗi trong get-customers:", str(e), flush=True)
         return jsonify({"error": str(e)}), 500
+
+
 
 # Lấy danh sách phòng
 @app.route('/get-room-list', methods=['POST'])
@@ -667,8 +730,8 @@ def get_room_list():
         trangThai = data.get('trangThai', "")
 
         conn = get_db_connection()
-        conn.set_charset_collation('utf8mb4', 'utf8mb4_unicode_ci')  # Đảm bảo UTF-8
-        cursor = conn.cursor(dictionary=True)
+        conn.set_charset_collation = 'utf8mb4'  # Đảm bảo UTF-8
+        cursor = conn.cursor()
 
         # Chỉ cho phép "Trống" hoặc "Đang sử dụng", nếu không thì giữ rỗng
         if trangThai not in ["Trống", "Đang sử dụng"]:
@@ -682,11 +745,12 @@ def get_room_list():
         cursor.callproc('layDanhSachPhong', (soPhong, tenLoai, trangThai))
 
         # Lấy kết quả từ stored procedure
-        results = []
-        for result in cursor.stored_results():
-            results.extend(result.fetchall())
+        # results = []
+        # for result in cursor.stored_results():
+        #     results.extend(result.fetchall())
 
         # Chuyển đổi kiểu Decimal thành float
+        results = cursor.fetchall()
         for item in results:
             for key, value in item.items():
                 if isinstance(value, Decimal):
@@ -712,15 +776,16 @@ def get_employees():
 
         # Kết nối đến database
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # Gọi Stored Procedure
         cursor.callproc('layDanhSachNhanVien', [ten_nhan_vien, so_dien_thoai])
 
         # Lấy kết quả
-        results = []
-        for result in cursor.stored_results():
-            results = result.fetchall()
+        # results = []
+        # for result in cursor.stored_results():
+        #     results = result.fetchall()
+        results = cursor.fetchall()
 
 
         # Đóng kết nối
