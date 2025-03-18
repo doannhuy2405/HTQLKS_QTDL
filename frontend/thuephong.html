@@ -1,128 +1,134 @@
 <!-- Quản lý thuê phòng -->
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Khách Sạn</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý thuê phòng</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        body {
-            display: flex;
-            font-family: Arial, sans-serif;
-            margin: 0;
-        }
-        .sidebar {
-            width: 250px;
-            background: #2c3e50;
-            color: white;
-            height: 100vh;
-            padding: 20px;
-        }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar ul li {
-            padding: 10px;
-        }
-        .sidebar ul li a {
-            color: white;
-            text-decoration: none;
-            display: block;
-        }
-        .sidebar ul li.active {
-            background: #16a085;
-        }
-        .content {
-            flex: 1;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #16a085;
-            color: white;
-        }
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
+      body {
+        display: flex;
+        font-family: Arial, sans-serif;
+        margin: 0;
+      }
+      .sidebar {
+        width: 250px;
+        background: #2c3e50;
+        color: white;
+        height: 100vh;
+        padding: 20px;
+      }
+      .sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+      .sidebar ul li {
+        padding: 10px;
+      }
+      .sidebar ul li a {
+        color: white;
+        text-decoration: none;
+        display: block;
+      }
+      .sidebar ul li.active {
+        background: #16a085;
+      }
+      .content {
+        flex: 1;
+        padding: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #16a085;
+        color: white;
+      }
+      .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="sidebar">
-        <h2>Quản Lý Khách Sạn</h2>
-        <ul>
-            <li><a href="./phong.html">Quản lý phòng</a></li>
-            <li><a href="./khachhang.html">Quản lý khách hàng</a></li>
-            <li><a href="./nhanvien.html">Quản lý nhân viên</a></li>
-            <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
-            <li class="active"><a href="./thuephong.html">Quản lý thuê phòng</a></li>
-            <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
-            <li><a href="./timkiem.html">Tìm kiếm</a></li>
-            <li><a href="./thongke.html">Thống kê</a></li>
-            <li><a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a></li>
-        </ul>
+      <h2>Quản Lý Khách Sạn</h2>
+      <ul>
+        <li><a href="./phong.html">Quản lý phòng</a></li>
+        <li><a href="./khachhang.html">Quản lý khách hàng</a></li>
+        <li><a href="./nhanvien.html">Quản lý nhân viên</a></li>
+        <li><a href="./dichvu.html">Quản lý dịch vụ</a></li>
+        <li class="active">
+          <a href="./thuephong.html">Quản lý thuê phòng</a>
+        </li>
+        <li><a href="./hoadon.html">Quản lý hóa đơn</a></li>
+        <li><a href="./timkiem.html">Tìm kiếm</a></li>
+        <li><a href="./thongke.html">Thống kê</a></li>
+        <li>
+          <a href="#" id="logoutBtn" onclick="handleLogout()">Đăng xuất</a>
+        </li>
+      </ul>
     </div>
     <div class="content">
-        <h1>Danh sách thuê phòng</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã thuê</th>
-                    <th>Mã phòng</th>
-                    <th>Mã khách hàng</th>
-                    <th>Ngày thuê</th>
-                    <th>Ngày nhận</th>
-                    <th>Ngày trả</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="rentTableBody">
-                <!-- Dữ liệu -->
-            </tbody>
-        </table>
+      <h1>Danh sách thuê phòng</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Mã thuê</th>
+            <th>Mã phòng</th>
+            <th>Mã khách hàng</th>
+            <th>Ngày thuê</th>
+            <th>Ngày nhận</th>
+            <th>Ngày trả</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="rentTableBody">
+          <!-- Dữ liệu -->
+        </tbody>
+      </table>
 
-        <h2>Thông tin thuê phòng</h2>
-        <label>Mã thuê: <input type="text" id="rentId"></label>
-        <label>Mã phòng: <input type="text" id="roomId"></label>
-        <label>Mã khách hàng: <input type="text" id="customerId"></label>
-        <label>Ngày thuê: <input type="datetime-local" id="rentDate"></label>
-        <label>Ngày nhận: <input type="datetime-local" id="checkIn"></label>
-        <label>Ngày trả: <input type="datetime-local" id="checkOut"></label>
-        <label>Trạng thái:</label>
-        <select id="rentStatus">
-            <option value="Đã đặt">Đã đặt</option>
-            <option value="Đang ở">Đang ở</option>
-            <option value="Đang ở">Đã trả</option>
-        </select>
+      <h2>Thông tin thuê phòng</h2>
+      <label>Mã thuê: <input type="text" id="rentId" /></label>
+      <label>Mã phòng: <input type="text" id="roomId" /></label>
+      <label>Mã khách hàng: <input type="text" id="customerId" /></label>
+      <label>Ngày thuê: <input type="datetime-local" id="rentDate" /></label>
+      <label>Ngày nhận: <input type="datetime-local" id="checkIn" /></label>
+      <label>Ngày trả: <input type="datetime-local" id="checkOut" /></label>
+      <label>Số ngày thuê phòng: <input type="number" id="numIn" /></label>
+      <label>Trạng thái:</label>
+      <select id="rentStatus">
+        <option value="Đã đặt">Đã đặt</option>
+        <option value="Đang ở">Đang ở</option>
+        <option value="Đã trả">Đã trả</option>
+      </select>
 
-        <div class="button-group">
-            <button onclick="addRent()">Thêm</button>
-            <button onclick="updateRent()">Sửa</button>
-            <button onclick="deleteRent()">Xóa</button>
-            <button onclick="exportRentExcel()">Xuất Excel</button>
-            <button onclick="clearForm()">Làm mới</button>
-        </div>
+      <div class="button-group">
+        <button onclick="addRent()">Thêm</button>
+        <button onclick="updateRent()">Sửa</button>
+        <button onclick="deleteRent()">Xóa</button>
+        <button onclick="exportRentExcel()">Xuất Excel</button>
+        <button onclick="clearForm()">Làm mới</button>
+      </div>
     </div>
 
     <script>
-        function fetchRentals() {
-            $.get("http://127.0.0.1:5000/thuephong", function(data) {
-                let rows = "";
-                data.forEach(rent => {
-                    rows += `<tr>
+      function fetchRentals() {
+        $.get("http://127.0.0.1:5000/thuephong", function (data) {
+          let rows = "";
+          data.forEach((rent) => {
+            rows += `<tr>
                         <td>${rent.MaThue}</td>
                         <td>${rent.MaPhong}</td>
                         <td>${rent.MaKhachHang}</td>
@@ -131,180 +137,251 @@
                         <td>${formatDateTime(rent.NgayTra)}</td>
                         <td>${rent.TrangThai}</td>
                         <td>
-                            <button onclick="fillForm('${rent.MaThue}', '${rent.MaPhong}', '${rent.MaKhachHang}', '${rent.NgayThue}', '${rent.NgayNhan}', '${rent.NgayTra}', '${rent.TrangThai}')">Chọn</button>
+                            <button onclick="fillForm('${rent.MaThue}', '${
+              rent.MaPhong
+            }', '${rent.MaKhachHang}', '${rent.NgayThue}', '${
+              rent.NgayNhan
+            }', '${rent.NgayTra}', '${rent.TrangThai}')">Chọn</button>
                         </td>
                     `;
-                });
-                $("#rentTableBody").html(rows);
-            }).fail(function(xrh) {
-                console.error("Lỗi API /thuephong", xrh.responseText);
-                alert("Không thể tải danh sách đặt phòng!");
-            });
+          });
+          $("#rentTableBody").html(rows);
+        }).fail(function (xrh) {
+          console.error("Lỗi API /thuephong", xrh);
+          alert("Không thể tải danh sách đặt phòng!");
+        });
+      }
+
+      function handleCulatorDate() {
+        // Lấy giá trị ngày từ input có id "checkIn" (ngày nhận phòng)
+        const checkInValue = $("#checkIn").val();
+        // Lấy giá trị ngày từ input có id "checkOut" (ngày trả phòng)
+        const checkOutValue = $("#checkOut").val();
+
+        // Chuyển giá trị ngày nhận phòng từ chuỗi (string) thành đối tượng Date để xử lý
+        const checkInDate = new Date(checkInValue);
+        // Chuyển giá trị ngày trả phòng từ chuỗi (string) thành đối tượng Date
+        const checkOutDate = new Date(checkOutValue);
+
+        // Tính hiệu số thời gian giữa ngày trả phòng và ngày nhận phòng (đơn vị: mili-giây)
+        const timeDifference = checkOutDate - checkInDate;
+        // Quy đổi hiệu số thời gian từ mili-giây sang số ngày (1 ngày = 1000ms * 60s * 60p * 24h)
+        const dayDifference = timeDifference / (1000 * 60 * 60 * 24);
+
+        // Kiểm tra và gán giá trị vào input "numIn" (số ngày thuê phòng)
+        if (dayDifference >= 0) {
+          // Nếu số ngày hợp lệ (lớn hơn hoặc bằng 0), gán giá trị vào input "numIn"
+          $("#numIn").val(Math.ceil(dayDifference));
+        } else {
+          // Nếu số ngày âm (ngày trả phòng nhỏ hơn ngày nhận phòng), xóa giá trị trong input "numIn"
+          $("#numIn").val("");
+          // In thông báo lỗi ra console để debug
+          console.log("Ngày check-out phải lớn hơn ngày check-in!");
+        }
+      }
+
+      $(document).ready(function () {
+        $("#checkOut").on("change", function () {
+          console.log("checkOut changed to:", $(this).val());
+          handleCulatorDate();
+        });
+        $("#checkIn").on("change", function () {
+          console.log("checkIn changed to:", $(this).val());
+          handleCulatorDate();
+        });
+      });
+
+      function handleUpdateStatus() {
+        $("#rentStatus").on("change", function () {
+          // Lấy giá trị hiện tại của select
+          const selectedValue = $(this).val();
+          const idRoom = $("#rentId").val();
+          if (idRoom) {
+            setTimeout(() => {
+              updateRent();
+            }, 500);
+          }
+        });
+      }
+
+      function fillForm(
+        id,
+        room,
+        customer,
+        rentDate,
+        checkIn,
+        checkOut,
+        status
+      ) {
+        $("#rentId").val(id);
+        $("#roomId").val(room);
+        $("#customerId").val(customer);
+        $("#rentDate").val(formatDateTime(rentDate));
+        $("#checkIn").val(formatDateTime(checkIn));
+        $("#checkOut").val(formatDateTime(checkOut));
+        $("#rentStatus").val(status);
+        handleCulatorDate();
+        handleUpdateStatus();
+      }
+
+      // Thêm thuê phòng
+      function addRent() {
+        let data = {
+          MaKhachHang: $("#customerId").val().trim(),
+          MaPhong: $("#roomId").val().trim(),
+          NgayThue: $("#rentDate").val().trim() + ":00",
+          NgayNhan: $("#checkIn").val().trim() + ":00",
+          NgayTra: $("#checkOut").val().trim() + ":00",
+          TrangThai: $("#rentStatus").val().trim(),
+        };
+
+        if (!validateRentData(data)) return;
+
+        $.ajax({
+          url: "http://127.0.0.1:5000/thuephong",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify(data),
+          success: function (response) {
+            alert("✅ Thêm đặt phòng thành công!");
+            fetchRentals();
+            clearForm();
+          },
+        }).fail(function (xhr) {
+          alert("❌ Lỗi khi thêm đặt phòng!");
+          console.error(xhr.responseText);
+        });
+      }
+
+      // Sửa thuê phòng
+      function updateRent() {
+        let id = $("#rentId").val().trim();
+        if (!id) {
+          alert("⚠ Vui lòng chọn một đơn thuê để sửa!");
+          return;
         }
 
-        function fillForm(id, room, customer, rentDate, checkIn, checkOut, status) {
-            $("#rentId").val(id);
-            $("#roomId").val(room);
-            $("#customerId").val(customer);
-            $("#rentDate").val(formatDateTime(rentDate));
-            $("#checkIn").val(formatDateTime(checkIn));
-            $("#checkOut").val(formatDateTime(checkOut));
-            $("#rentStatus").val(status);
-        }
+        let data = {
+          MaKhachHang: $("#customerId").val().trim(),
+          MaPhong: $("#roomId").val().trim(),
+          NgayThue: $("#rentDate").val().trim(),
+          NgayNhan: $("#checkIn").val().trim(),
+          NgayTra: $("#checkOut").val().trim(),
+          TrangThai: $("#rentStatus").val().trim(),
+        };
 
-        // Thêm thuê phòng
-        function addRent() {
-            let data = {
-                MaKhachHang: $("#customerId").val().trim(),
-                MaPhong: $("#roomId").val().trim(),
-                NgayThue: $("#rentDate").val().trim() + ":00",
-                NgayNhan: $("#checkIn").val().trim() + ":00",
-                NgayTra: $("#checkOut").val().trim() + ":00",
-                TrangThai: $("#rentStatus").val().trim()
-            };
+        if (!validateRentData(data)) return;
+
+        $.ajax({
+          url: `http://127.0.0.1:5000/thuephong/${id}`,
+          type: "PUT",
+          contentType: "application/json",
+          data: JSON.stringify(data),
+          success: function () {
+            alert("✅ Cập nhật đặt phòng thành công!");
+            location.reload();
+            // fetchRentals();
+            // clearForm();
+          },
+        }).fail(function (xhr) {
+          alert("❌ Lỗi khi cập nhật đặt phòng!");
+          console.error(xhr);
+        });
+      }
+      
     
-            if (!validateRentData(data)) return;
-    
-            $.ajax({
-                url: "http://127.0.0.1:5000/thuephong",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(data),
-                success: function(response) {
-                    alert("✅ Thêm đặt phòng thành công!");
-                    fetchRentals();
-                    clearForm();
-                }
-            }).fail(function(xhr) {
-                alert("❌ Lỗi khi thêm đặt phòng!");
-                console.error(xhr.responseText);
-            });
+      // Xóa thuê phòng
+      function deleteRent() {
+        let id = $("#rentId").val().trim();
+        if (!id) {
+          alert("⚠ Vui lòng chọn một đơn thuê để xóa!");
+          return;
         }
 
-        // Sửa thuê phòng
-        function updateRent() {
-            let id = $("#rentId").val().trim();
-            if (!id) {
-                alert("⚠ Vui lòng chọn một đơn thuê để sửa!");
-                return;
-            }
-    
-            let data = {
-                MaKhachHang: $("#customerId").val().trim(),
-                MaPhong: $("#roomId").val().trim(),
-                NgayThue: $("#rentDate").val().trim() + ":00",
-                NgayNhan: $("#checkIn").val().trim() + ":00",
-                NgayTra: $("#checkOut").val().trim() + ":00",
-                TrangThai: $("#rentStatus").val().trim()
-            };
-    
-            if (!validateRentData(data)) return;
-    
-            $.ajax({
-                url: `http://127.0.0.1:5000/thuephong/${id}`,
-                type: "PUT",
-                contentType: "application/json",
-                data: JSON.stringify(data),
-                success: function() {
-                    alert("✅ Cập nhật đặt phòng thành công!");
-                    fetchRentals();
-                    clearForm();
-                }
-            }).fail(function(xhr) {
-                alert("❌ Lỗi khi cập nhật đặt phòng!");
-                console.error(xhr.responseText);
-            });
+        if (!confirm("⚠ Bạn có chắc muốn xóa đơn thuê này không?")) return;
+
+        $.ajax({
+          url: `http://127.0.0.1:5000/thuephong/${id}`,
+          type: "DELETE",
+          success: function () {
+            alert("✅ Xóa đặt phòng thành công!");
+            fetchRentals();
+            clearForm();
+          },
+        }).fail(function (xhr) {
+          alert("❌ Lỗi khi xóa đặt phòng!");
+          console.error(xhr.responseText);
+        });
+      }
+
+      // Cập nhập ngày giờ
+      function formatDateTime(dateString) {
+        if (!dateString) return ""; // Nếu không có giá trị thì return rỗng
+
+        let date = new Date(dateString);
+        if (isNaN(date.getTime())) return ""; // Nếu ngày không hợp lệ, return rỗng
+
+        let year = date.getFullYear();
+        let month = String(date.getMonth() + 1).padStart(2, "0");
+        let day = String(date.getDate()).padStart(2, "0");
+        let hours = String(date.getHours()).padStart(2, "0");
+        let minutes = String(date.getMinutes()).padStart(2, "0");
+
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      }
+
+      // Xuất excel
+      function exportRentExcel() {
+        window.location.href = "http://127.0.0.1:5000/thuephong/export";
+      }
+
+      // Xóa form
+      function clearForm() {
+        $("#rentId").val("");
+        $("#roomId").val("");
+        $("#customerId").val("");
+        $("#rentDate").val("");
+        $("#checkIn").val("");
+        $("#checkOut").val("");
+        $("#rentStatus").val("");
+      }
+
+      function validateRentData(data) {
+        if (
+          !data.MaKhachHang ||
+          !data.MaPhong ||
+          !data.NgayThue ||
+          !data.NgayNhan ||
+          !data.NgayTra ||
+          !data.TrangThai
+        ) {
+          alert("⚠ Vui lòng nhập đầy đủ thông tin đặt phòng!");
+          return false;
         }
 
+        let rentDate = new Date(data.NgayThue);
+        let checkInDate = new Date(data.NgayNhan);
+        let checkOutDate = new Date(data.NgayTra);
 
-        // Xóa thuê phòng
-        function deleteRent() {
-            let id = $("#rentId").val().trim();
-            if (!id) {
-                alert("⚠ Vui lòng chọn một đơn thuê để xóa!");
-                return;
-            }
-    
-            if (!confirm("⚠ Bạn có chắc muốn xóa đơn thuê này không?")) return;
-    
-            $.ajax({
-                url: `http://127.0.0.1:5000/thuephong/${id}`,
-                type: "DELETE",
-                success: function() {
-                    alert("✅ Xóa đặt phòng thành công!");
-                    fetchRentals();
-                    clearForm();
-                }
-            }).fail(function(xhr) {
-                alert("❌ Lỗi khi xóa đặt phòng!");
-                console.error(xhr.responseText);
-            });
+        if (rentDate > checkInDate) {
+          alert("⚠ Ngày nhận phải lớn hơn hoặc bằng ngày thuê!");
+          return false;
         }
-
-        // Cập nhập ngày giờ
-        function formatDateTime(dateString) {
-            if (!dateString) return ""; // Nếu không có giá trị thì return rỗng
-        
-            let date = new Date(dateString);
-            if (isNaN(date.getTime())) return ""; // Nếu ngày không hợp lệ, return rỗng
-        
-            let year = date.getFullYear();
-            let month = String(date.getMonth() + 1).padStart(2, '0');
-            let day = String(date.getDate()).padStart(2, '0');
-            let hours = String(date.getHours()).padStart(2, '0');
-            let minutes = String(date.getMinutes()).padStart(2, '0');
-        
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        if (checkInDate >= checkOutDate) {
+          alert("⚠ Ngày trả phải lớn hơn ngày nhận!");
+          return false;
         }
-        
+        return true;
+      }
 
-        // Xuất excel
-        function exportRentExcel() {
-            window.location.href = "http://127.0.0.1:5000/thuephong/export";
-        }
+      $(document).ready(fetchRentals);
 
-
-        // Xóa form
-        function clearForm() {
-            $("#rentId").val("");
-            $("#roomId").val("");
-            $("#customerId").val("");
-            $("#rentDate").val("");
-            $("#checkIn").val("");
-            $("#checkOut").val("");
-            $("#rentStatus").val("");
-        }
-
-        function validateRentData(data) {
-            if (!data.MaKhachHang || !data.MaPhong || !data.NgayThue || !data.NgayNhan || !data.NgayTra || !data.TrangThai) {
-                alert("⚠ Vui lòng nhập đầy đủ thông tin đặt phòng!");
-                return false;
-            }
-
-            let rentDate = new Date(data.NgayThue);
-            let checkInDate = new Date(data.NgayNhan);
-            let checkOutDate = new Date(data.NgayTra);
-
-            if (rentDate > checkInDate) {
-                alert("⚠ Ngày nhận phải lớn hơn hoặc bằng ngày thuê!");
-                return false;
-            }
-            if (checkInDate >= checkOutDate) {
-                alert("⚠ Ngày trả phải lớn hơn ngày nhận!");
-                return false;
-            }
-            return true;
-        }
-
-
-        $(document).ready(fetchRentals);
-
-        function handleLogout() {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            alert("✅ Đã đăng xuất!");
-            window.location.href = "./trangchu.html"; // Chuyển về trang chủ
-        }
+      function handleLogout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        alert("✅ Đã đăng xuất!");
+        window.location.href = "./trangchu.html"; // Chuyển về trang chủ
+      }
     </script>
-</body>
+  </body>
 </html>
